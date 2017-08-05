@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}lights{% endblock title %}
+
+
+{% block content %}
+
+<h1>Lights</h1>
+
+  <form method="POST">
+    <input type="submit" name="red" value="Red"/>
+    <br>
+    <input type="submit" name="green" value="Green"/>
+    <br>
+    <input type="submit" name="blue" value="Blue"/>
+    <br>
+    <br>
+    <input type="submit" name="off" value="Off"/>
+    {% csrf_token %}
+  </form>
+
+{% endblock content %}
