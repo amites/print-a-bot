@@ -40,7 +40,7 @@ INSTALLED_APPS = [
 
     # Apps
     'controls',
-    'rest_framework',
+    #'rest_framework',
 
     ]
 

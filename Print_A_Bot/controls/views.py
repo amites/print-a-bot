@@ -31,3 +31,7 @@ class LightsView(View):
 		pass
 
 
+def creat_lightshow(request):
+	pass
+
+
