@@ -20,6 +20,6 @@ class LightShowStep(models.Model):
 	order = models.IntegerField()
 
 	def __str__(self):
-		return '{}, LED {}, order {}'.format(self.show, self.light, self.order)
+		return '{}, LED {}, order {}, color ({},{},{})'.format(self.show, self.light, self.order, self.red, self.green, self.blue)
 
 	

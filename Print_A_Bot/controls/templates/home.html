@@ -7,4 +7,12 @@
 
 <h1>Home</h1>
 
+  <div>
+    {% for lightshow in lightshows %}
+    <ul>
+        <li><a href="{% url 'single_lightshow' lightshow_id=lightshow_id %}">{{ lightshow.name }}</a></li>
+    </ul>
+    {% endfor %}
+  </div>
+
 {% endblock content %}
