@@ -40,9 +40,32 @@ INSTALLED_APPS = [
 
     # Apps
     'controls',
-    
+    'rest_framework',
 
-]
+    ]
+
+
+
+# RPi motor control
+MOTOR_A = 10
+MOTOR_B = 15
+MOTOR_CHOICES = (
+    (1, 'motor left'),
+    (2, 'motor right'),
+)
+
+# RPi LED control
+# LED A and B are pin numbers..
+LED_A = 5
+LED_B = 10
+LED_CHOICES = (
+    (1, 'LED 1'),
+    (2, 'LED 2'),
+)
+
+
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
