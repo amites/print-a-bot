@@ -10,7 +10,7 @@
   <div>
     {% for lightshow in lightshows %}
     <ul>
-        <li><a href="{% url 'single_lightshow' lightshow_id=lightshow_id %}">{{ lightshow.name }}</a></li>
+        <li><a href="{% url 'single_lightshow' lightshow_id=lightshow.id %}">{{ lightshow.name }}</a></li>
     </ul>
     {% endfor %}
   </div>

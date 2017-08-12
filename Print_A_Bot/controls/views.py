@@ -18,12 +18,11 @@ def home(request):
 
 
 def single_lightshow(request, lightshow_id):
-	lightshow = LightShow.objects.get(id=lightshow_id)
 	context = {
-		'lightshow': lightshow
+		'lightshow': LightShow.objects.get(id=lightshow_id)
 	}
 	return render(request, 'single_lightshow.html', context)
-	
+
 
 class MovementView(View):
 	def get(self, request):
