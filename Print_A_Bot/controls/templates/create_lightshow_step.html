@@ -11,7 +11,10 @@
     {{ form.as_p }}
       <br>
 
-    <input type="submit" value="Save"/>
+      <input type="submit" name="add_another" value="Save and add another step"/>
+      <br><br>
+      <input type="submit" value="Save and Complete"/>
+    
     {% csrf_token %}
   </form>
 

@@ -8,5 +8,26 @@
 <h1>{{lightshow.name}}</h1>
 
 
+<table border="1">
+	<tr>
+		<th>Light</th>
+		<th>Red</th>
+		<th>Green</th>
+		<th>Blue</th>
+		<th>Order</th>
+	</tr>
+{% for light_step in lightshow.lightshowstep_set.all %}
+    <tr>
+        <td>{{ light_step.light }}</td>
+        <td>{{ light_step.red }}</td>
+        <td>{{ light_step.green }}</td>
+        <td>{{ light_step.blue }}</td>
+        <td>{{ light_step.order }}</td>
+    </tr>
+{% empty %}
+    <h4>No Steps in this light show<h4>
+{% endfor %}
+</table>
+
 
 {% endblock content %}
