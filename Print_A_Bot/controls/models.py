@@ -21,6 +21,7 @@ class LightShowStep(models.Model):
 
     class Meta:
         ordering = ['order', ]
+        unique_together = ('show', 'light', 'order')
 
     def __str__(self):
         return '{}, LED {}, order {}, color ({},{},{})'.format(self.show, self.light, self.order, self.red, self.green, self.blue)
