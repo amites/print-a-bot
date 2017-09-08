@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Lightshow{% endblock title %}
+
+
+{% block content %}
+
+<h1>Create Lightshow</h1>
+
+    <form method="POST">
+    {{ form.as_p }}
+      <br>
+
+    <input type="submit" value="Save"/>
+    {% csrf_token %}
+  </form>
+
+{% endblock content %}

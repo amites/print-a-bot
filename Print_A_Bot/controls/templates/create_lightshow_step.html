@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Lightshow Step{% endblock title %}
+
+
+{% block content %}
+
+<h1>Create Lightshow Step</h1>
+
+    <form method="POST">
+    {{ form.as_p }}
+      <br>
+
+      <input type="submit" name="add_another" value="Save and add another step"/>
+      <br><br>
+      <input type="submit" value="Save and Complete"/>
+    
+    {% csrf_token %}
+  </form>
+
+{% endblock content %}

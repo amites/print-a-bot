@@ -11,12 +11,25 @@
 
 <body>
 
+  {% if messages %}
+    <div>
+      <strong>Messages:</strong>
+      <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
  <div>
     <strong>Menu:</strong>
     <ul>
       <li><a href="{% url 'home' %}">Home</a></li>
       <li><a href="{% url 'movement' %}">Movement</a></li>
       <li><a href="{% url 'lights' %}">Lights</a></li>
+      <li><a href="{% url 'create_lightshow' %}">Create Lightshow</a></li>
+      <li><a href="{% url 'create_lightshow_step' %}">Create Lightshow Step</a></li>
     </ul>
   </div>
   <hr>
