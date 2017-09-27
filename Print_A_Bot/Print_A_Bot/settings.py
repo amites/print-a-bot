@@ -45,7 +45,10 @@ INSTALLED_APPS = [
     ]
 
 
-# RPi motor control
+# Raspberry Pi Config
+PIN_MODE = 'board'
+# PIN_MODE = 'bcm'
+
 # Set which GPIO pins the drive outputs are connected
 PWMA = 22
 AIN1 = 13

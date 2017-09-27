@@ -12,6 +12,13 @@ def setup():
     Assumes that all PINS are defined in settings and 
         that GPIO.setmode has been called.
     """
+    if settings.PIN_MODE == 'board':
+        GPIO.setmode(GPIO.BOARD)
+    elif settings.PIN_MODE == 'bcm':
+        GPIO.setmode(GPIO.BCM)
+    else:
+        raise ValueError('PIN_MODE must be one of:  bpard, bdm')
+
     GPIO.setup(settings.AIN1, GPIO.OUT)
     GPIO.setup(settings.AIN2, GPIO.OUT)
     GPIO.setup(settings.BIN1, GPIO.OUT)

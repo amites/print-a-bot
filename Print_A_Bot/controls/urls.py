@@ -10,7 +10,7 @@ urlpatterns = [
     url(r'^create_lightshow_step$', NewLightShowStepView.as_view(), name='create_lightshow_step'),
     url(r'^lightshow/(?P<lightshow_id>[0-9]+)$', single_lightshow, name='single_lightshow'),
 
-    url(r'motor', MoveBot, name='move_bot'),
+    url(r'motor', MoveBot.as_view(), name='move_bot'),
 
     url(r'^$', home, name='home'),
 ]
