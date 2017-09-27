@@ -2,7 +2,6 @@ from logging import getLogger
 
 logger = getLogger('Print-a-bot')
 
-
 def light(led, R, B, G):
     logger.info('light was called with: led:{}'.format(led))
     logger.info('red was called with: R:{}' .format(R))
