@@ -1,5 +1,6 @@
 from django.conf.urls import url
-from controls.views import home, single_lightshow, MovementView, LightsView, NewLightShowView, NewLightShowStepView
+from controls.views import (home, single_lightshow, MoveBot, MovementView, LightsView, NewLightShowView,
+                            NewLightShowStepView)
 
 
 urlpatterns = [
@@ -8,5 +9,8 @@ urlpatterns = [
     url(r'^create_lightshow$', NewLightShowView.as_view(), name='create_lightshow'),
     url(r'^create_lightshow_step$', NewLightShowStepView.as_view(), name='create_lightshow_step'),
     url(r'^lightshow/(?P<lightshow_id>[0-9]+)$', single_lightshow, name='single_lightshow'),
+
+    url(r'motor', MoveBot, name='move_bot'),
+
     url(r'^$', home, name='home'),
 ]

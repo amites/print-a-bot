@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Motor Move</title>
+
+  <style type="text/css">
+    .arw {
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+
+    .arw-up {
+      border-width: 0 100px 100px 100px;
+      border-color: transparent transparent #007bff transparent;
+    }
+
+    .arw-down {
+      border-width: 100px 100px 0 100px;
+      border-color: #007bff transparent transparent transparent;
+    }
+
+    .arw-left {
+      border-width: 100px 100px 100px 0;
+      border-color: transparent #007bff transparent transparent;
+    }
+    
+    .arw-right {
+      border-width: 100px 0 100px 100px;
+      border-color: transparent transparent transparent #007bff;
+    }
+  </style>
+</head>
+<body>
+
+{% if cmd %}
+  <h2>Moved bot {{ cmd }}</h2>
+{% endif %}
+<br>
+{% url 'move_bot' as url %}
+<table>
+  <tr>
+    <td></td>
+    <td><a href="{{ url }}?cmd=up" class="arw arw-up"></a></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><a href="{{ url }}?cmd=left" class="arw arw-left"></a></td>
+    <td></td>
+    <td><a href="{{ url }}?cmd=right" class="arw arw-right"></a></td>
+  </tr>
+  <tr>
+    <td><a href="{{ url }}?cmd=down" class="arw arw-down"></a></td>
+    <td></td>
+  </tr>
+</table>
+
+</body>
+</html>
