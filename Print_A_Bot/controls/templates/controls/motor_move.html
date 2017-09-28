@@ -68,11 +68,11 @@
 <br>
 {% url 'move_bot' as url %}
 <div class="controls_motor">
-  <a href="{{ url }}?cmd=up" class="arw arw-up"></a>
+  <a href="{{ url }}?cmd=forward" class="arw arw-up"></a>
   <a href="{{ url }}?cmd=left" class="arw arw-left"></a>
   <a href="{{ url }}?cmd=stop" class="stop"></a>
   <a href="{{ url }}?cmd=right" class="arw arw-right"></a>
-  <a href="{{ url }}?cmd=down" class="arw arw-down"></a>
+  <a href="{{ url }}?cmd=reverse" class="arw arw-down"></a>
 </div>
 
 {% comment %}
