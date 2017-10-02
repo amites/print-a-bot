@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,35 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'channels',
+    # 'rest_framework',
+
     # Apps
     'controls',
-    #'rest_framework',
-
-    ]
-
-
-# Raspberry Pi Config
-PIN_MODE = 'board'
-# PIN_MODE = 'bcm'
-
-# Set which GPIO pins the drive outputs are connected
-PWMA = 22
-AIN1 = 13
-AIN2 = 15
-PWMB = 12
-BIN1 = 16
-BIN2 = 18
-STBY = 7
-
-
-# RPi LED control
-# LED A and B are pin numbers..
-LED_A = 5
-LED_B = 10
-LED_CHOICES = (
-    (1, 'LED 1'),
-    (2, 'LED 2'),
-)
+]
 
 
 MIDDLEWARE = [
@@ -129,6 +107,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'asgi_redis.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('localhost', 6379)],
+        },
+        'ROUTING': 'Print_A_Bot.routing.channel_routing',
+    }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
@@ -148,6 +135,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Load RPi config
+sys.path.append(os.path.dirname(BASE_DIR))
+from config import *
 
 # Override settings to match environment
 try:

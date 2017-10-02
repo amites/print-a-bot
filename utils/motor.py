@@ -2,7 +2,6 @@
 Basic utilities to control 2 servo motors using the TB6612FNG control board.
 """
 
-from django.conf import settings
 import RPi.GPIO as GPIO
 
 

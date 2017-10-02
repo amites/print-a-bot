@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import redis
 from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.views import View
 
 from controls.forms import LightShowForm, LightShowStepForm
-from controls.models import LightShow, LightShowStep
-from controls.utils import motor
-
+from controls.models import LightShow
 
 
 def home(request):
@@ -94,23 +93,21 @@ class NewLightShowStepView(View):
 
 class MoveBot(View):
     def get(self, request):
-        cmd_str = request.GET.get('cmd', None)
-        if cmd_str in ['forward', 'f']:
-            cmd = motor.forward
-        elif cmd_str in ['reverse', 'r']:
-            cmd = motor.reverse
-        elif cmd_str in ['left', ';']:
-            cmd = motor.left
-        elif cmd_str in ['right', 'r']:
-            cmd = motor.right
-        elif cmd_str in ['stop', 's']:
-            cmd = motor.stop
-        else:
-            cmd = None
+        cmd_str = request.GET.get('cmd', '').lower()
+        r = redis.Redis()
 
-        if cmd:
-            motor.setup()
-            cmd()
+        if cmd_str in ['forward', 'f']:
+            r.publish('controls', 'forward')
+        elif cmd_str in ['reverse', 'r']:
+            r.publish('controls', 'reverse')
+        elif cmd_str in ['left', 'l']:
+            r.publish('controls', 'left')
+        elif cmd_str in ['right', 'r']:
+            r.publish('controls', 'right')
+        elif cmd_str in ['stop', 's']:
+            r.publish('controls', 'stop')
+        else:
+            cmd_str = 'None'
 
         context = {
             'cmd_str': cmd_str,
