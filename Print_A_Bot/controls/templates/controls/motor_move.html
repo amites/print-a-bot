@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Motor Move</title>
+
+  <style type="text/css">
+    .controls_motor {
+      height: 420px;
+      width: 420px;
+
+      position: relative;
+      left: 50%;
+      margin-left: -210px;
+      top: 50%;
+    }
+
+    .arw {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      position: absolute;
+    }
+
+    .arw-up {
+      top: 0;
+      left: 110px;
+      border-width: 0 100px 100px 100px;
+      border-color: transparent transparent #007bff transparent;
+    }
+
+    .arw-down {
+      bottom: 0;
+      left: 110px;
+      border-width: 100px 100px 0 100px;
+      border-color: #007bff transparent transparent transparent;
+    }
+
+    .arw-left {
+      left: 0;
+      top: 110px;
+      border-width: 100px 100px 100px 0;
+      border-color: transparent #007bff transparent transparent;
+    }
+    
+    .arw-right {
+      right: 0;
+      top: 110px;
+      border-width: 100px 0 100px 100px;
+      border-color: transparent transparent transparent #007bff;
+    }
+
+    a.stop {
+      width: 150px;
+      height: 150px;
+      background: red;
+      position: absolute;
+      top: 130px;
+      left: 130px;
+    }
+  </style>
+</head>
+<body>
+
+{% if cmd %}
+  <h2>Moved bot {{ cmd }}</h2>
+{% endif %}
+<br>
+{% url 'move_bot' as url %}
+<div class="controls_motor">
+  <a href="{{ url }}?cmd=forward" class="arw arw-up"></a>
+  <a href="{{ url }}?cmd=left" class="arw arw-left"></a>
+  <a href="{{ url }}?cmd=stop" class="stop"></a>
+  <a href="{{ url }}?cmd=right" class="arw arw-right"></a>
+  <a href="{{ url }}?cmd=reverse" class="arw arw-down"></a>
+</div>
+
+{% comment %}
+<table>
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+{% endcomment %}
+</body>
+</html>

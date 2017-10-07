@@ -4,10 +4,11 @@ from __future__ import unicode_literals
 from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
-
 from django.views import View
+
 from controls.forms import LightShowForm, LightShowStepForm
 from controls.models import LightShow, LightShowStep
+from controls.utils import motor
 
 
 
@@ -91,5 +92,27 @@ class NewLightShowStepView(View):
         return redirect(reverse('home'))
 
 
+class MoveBot(View):
+    def get(self, request):
+        cmd_str = request.GET.get('cmd', None)
+        if cmd_str in ['forward', 'f']:
+            cmd = motor.forward
+        elif cmd_str in ['reverse', 'r']:
+            cmd = motor.reverse
+        elif cmd_str in ['left', ';']:
+            cmd = motor.left
+        elif cmd_str in ['right', 'r']:
+            cmd = motor.right
+        elif cmd_str in ['stop', 's']:
+            cmd = motor.stop
+        else:
+            cmd = None
 
+        if cmd:
+            motor.setup()
+            cmd()
 
+        context = {
+            'cmd_str': cmd_str,
+        }
+        return render(request, 'controls/motor_move.html', context)

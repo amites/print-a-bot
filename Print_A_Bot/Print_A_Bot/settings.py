@@ -45,14 +45,19 @@ INSTALLED_APPS = [
     ]
 
 
+# Raspberry Pi Config
+PIN_MODE = 'board'
+# PIN_MODE = 'bcm'
 
-# RPi motor control
-MOTOR_A = 10
-MOTOR_B = 15
-MOTOR_CHOICES = (
-    (1, 'motor left'),
-    (2, 'motor right'),
-)
+# Set which GPIO pins the drive outputs are connected
+PWMA = 22
+AIN1 = 13
+AIN2 = 15
+PWMB = 12
+BIN1 = 16
+BIN2 = 18
+STBY = 7
+
 
 # RPi LED control
 # LED A and B are pin numbers..
@@ -62,9 +67,6 @@ LED_CHOICES = (
     (1, 'LED 1'),
     (2, 'LED 2'),
 )
-
-
-
 
 
 MIDDLEWARE = [
@@ -146,3 +148,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Override settings to match environment
+try:
+    from local_settings import *
+except ImportError:
+    pass
