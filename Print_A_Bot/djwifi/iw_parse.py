@@ -1,12 +1,3 @@
-#! /usr/bin/env python
-
-# Hugo Chargois - 17 jan. 2010 - v.0.1
-# Parses the output of iwlist scan into a table
-
-# You can add or change the functions to parse the properties
-# of each AP (cell) below. They take one argument, the bunch of text
-# describing one cell in iwlist scan and return a property of that cell.
-
 import re
 from subprocess import call, Popen, PIPE
 from time import sleep
@@ -16,7 +7,7 @@ VERSION_RGX = re.compile("version\s+\d+", re.IGNORECASE)
 
 def get_ssid(cell):
     """ Gets the name / essid of a network / cell.
-    @param str cell
+    @param cell str
         A network / cell from iwlist scan.
 
     @return str
@@ -28,7 +19,7 @@ def get_ssid(cell):
 
 def get_quality(cell):
     """ Gets the quality of a network / cell.
-    @param str cell
+    @param cell str
         A network / cell from iwlist scan.
 
     @return str
@@ -41,7 +32,7 @@ def get_quality(cell):
 
 def get_signal_level(cell):
     """ Gets the signal level of a network / cell.
-    @param str cell
+    @param cell str
         A network / cell from iwlist scan.
 
     @return string
@@ -59,7 +50,7 @@ def get_signal_level(cell):
 
 def get_channel(cell):
     """ Gets the channel of a network / cell.
-    @param str cell
+    @param cell str
         A network / cell from iwlist scan.
 
     @return string
@@ -76,7 +67,7 @@ def get_channel(cell):
 
 def get_encryption(cell):
     """ Gets the encryption type of a network / cell.
-    @param str cell
+    @param cell str
         A network / cell from iwlist scan.
 
     @return string
@@ -113,7 +104,7 @@ def get_is_encrypted(cell):
 
 def get_address(cell):
     """ Gets the address of a network / cell.
-    @param str cell
+    @param cell str
         A network / cell from iwlist scan.
 
     @return string
@@ -125,7 +116,7 @@ def get_address(cell):
 
 def get_bit_rates(cell):
     """ Gets the bit rate of a network / cell.
-    @param str cell
+    @param cell str
         A network / cell from iwlist scan.
 
     @return string
@@ -221,7 +212,7 @@ def print_cells(cells, columns):
 
 def get_parsed_cells(iw_data, rules=None, sort_by=None):
     """ Parses iwlist output into a list of networks.
-        @param list iw_data
+        @param iw_data list
             Output from iwlist scan.
             A list of strings.
 
@@ -272,15 +263,17 @@ def get_djwifi_list(iw_data):
     return get_parsed_cells(iw_data, rules, 'quality')
 
 
-def call_iwlist(interface='wlan0'):
+def call_iwlist(interface=None):
     """ Get iwlist output via subprocess
-        @param str interface
+        @param interface str
             interface to scan
             default is wlan0
 
         @return string
             properties: iwlist output
     """
+    if interface is None:
+        interface = 'wlan0'
     p = Popen(['sudo', 'iwlist', interface, 'scanning'],
               stdout=PIPE, stderr=PIPE)
     output = p.stdout.read()
@@ -292,18 +285,16 @@ def call_iwlist(interface='wlan0'):
         return call_iwlist(interface)
 
 
-def get_interfaces(interface="wlan0"):
+def get_interfaces(interface=None):
     """ Get parsed iwlist output
-        @param str interface
+        @param interface str
             interface to scan
             default is wlan0
 
-        @param list columns
+        @param columns list
             default data attributes to return
 
         @return dict
             properties: dictionary of iwlist attributes
     """
     return get_parsed_cells(call_iwlist(interface).split('\n'))
-
-
