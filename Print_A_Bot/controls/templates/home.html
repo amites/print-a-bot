@@ -6,5 +6,15 @@
 {% block content %}
 
 <h1>Home</h1>
+<h3>Lightshows</h3>
+
+  <div>
+	<ul>
+    {% for lightshow in lightshows %}
+        <li><a href="{% url 'single_lightshow' lightshow_id=lightshow.id %}">{{ lightshow.name }}</a></li>
+    
+    {% endfor %}
+    </ul>
+  </div>
 
 {% endblock content %}

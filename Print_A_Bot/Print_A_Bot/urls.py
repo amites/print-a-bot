@@ -18,5 +18,6 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^wifi/', include('djwifi.urls', namespace='wifi')),
     url(r'^', include('controls.urls')),
 ]
