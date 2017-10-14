@@ -18,27 +18,14 @@ logger = getLogger(__name__)
 
 
 class Command(BaseCommand):
-    # TODO: add command line args to initial_config for individual functions
     def add_arguments(self, parser):
         # linux config
-        parser.add_argument('--initial', '--full', action='store_true', dest='run_config', default=False,
-                            help=_('Run a full initial configuration')),
-        parser.add_argument('--dev', action='store_true', dest='dev', default=False,
-                            help=_('Configure as a development hub.')),
-        parser.add_argument('--install', action='store_true', dest='install_packages', default=False,
-                            help=_('Whether to run package installation scripts.')),
-
-        parser.add_argument('--host', action='store_true', dest='update_host', default=False,
-                            help=_('Update system hostname using settings.HOST_NAME.')),
-        parser.add_argument('--ntp', action='store_true', dest='configure_ntp', default=False,
-                            help=_('Whether to configure and restart ntp service.')),
         parser.add_argument('--timezone', action='store_true', dest='set_timezone', default=False,
                             help=_('Set system timezone from config.')),
         parser.add_argument('--cleanup', action='store_true', dest='cleanup', default=False,
                             help=_('Clean up system to maintain stability.')),
-
-        parser.add_argument('--startup', action='store_true', dest='startup', default=False,
-                            help=_('Run startup actions')),
+        parser.add_argument('--shutdown', action='store_true', dest='shutdown', default=False,
+                            help=_('Run shutdown scripts.'))
 
         # wifi
         parser.add_argument('--ap_on', action='store_true', dest='ap_on', default=False,
@@ -46,16 +33,6 @@ class Command(BaseCommand):
         parser.add_argument('--ap_off', action='store_true', dest='ap_off', default=False,
                             help=_('Stop wireless access point.')),
         parser.add_argument('--set_wifi', action='store_true', dest='set_wifi', default=False),
-
-        # beaglebone specific
-        parser.add_argument('--no-heartbeat', action='store_true', dest='disable_heartbeat', default=False,
-                            help=_('Whether to disable the Beaglebone Black led heartbeat.')),
-        parser.add_argument('--pins-on', action='store_true', dest='pins_on', default=False,
-                            help=_('Turn all GPIO pins on.')),
-        parser.add_argument('--pins-off', action='store_true', dest='pins_off', default=False,
-                            help=_('Turn all GPIO pins off.')),
-        parser.add_argument('--shutdown', action='store_true', dest='shutdown', default=False,
-                            help=_('Run shutdown scripts.'))
 
     def __init__(self):
         self.dev = False
@@ -67,18 +44,6 @@ class Command(BaseCommand):
         super(Command, self).__init__()
 
     # server config #
-
-    @staticmethod
-    def _configure_ntp(host=None):
-        """
-        Setup automated remote time sync.
-        """
-        logger.debug('running configure_ntp')
-        if host is None:
-            host = 'time.nist.gov'
-        call(['service', 'ntp', 'stop'])
-        call(['ntpdate', '-s', host])
-        call(['service', 'ntp', 'start'])
 
     @staticmethod
     def _kill_process(name):
@@ -95,29 +60,7 @@ class Command(BaseCommand):
                 else:
                     logger.info('found process %s but cannot find PID\n\t%s' % (name, line))
 
-    @staticmethod
-    def _write_system_template(file_path, template, context):
-        if path.exists(file_path):
-            # backup old file
-            rename(file_path, '%s--%s' % (file_path, datetime.now().strftime('%Y-%m-%d--%H-%M')))
-        with open(file_path, 'w+') as f:
-            f.write(render_to_string('system/%s' % template, context))
-
     # wifi #
-
-    @staticmethod
-    def _set_wifi_interface():
-        try:
-            output = check_output('iwconfig')
-        except OSError:
-            logger.warning('iwlist not available -- could not set wifi_interface')
-            return
-        result = re.search('wlan\d', output)
-        if not result:
-            logger.warning('no wifi interface found -- could not set wifi_interface')
-            return
-        # config_save('wifi_interface', result.group(0))
-        return True
 
     def _configure_wifi(self):
         try:
@@ -281,14 +224,11 @@ class Command(BaseCommand):
 
         if options.get('cleanup'):
             self._clean_logs()
-            self._configure_ntp()
-
-        if options.get('configure_ntp', False):
-            self._configure_ntp()
 
         if options.get('set_wifi', False):
             self._configure_wifi()
             self._set_wifi_network()
+
         # configure access point
         if options.get('ap_on', False):
             self._ap_start()
