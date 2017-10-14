@@ -1,6 +1,6 @@
 from django.conf.urls import url
+from djwifi.views import access_point, wifi_connect, wifi_current, wifi_disconnect, wifi_home, wifi_list
 
-from djwifi.views import access_point, wifi_connect, wifi_current, wifi_disconnect, wifi_home, wifi_list 
 
 urlpatterns = (
     url(r'^wifi_connect', wifi_connect, name='connect'),

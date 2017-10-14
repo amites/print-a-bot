@@ -40,7 +40,7 @@ def wifi_current(request):
     if not settings.WIFI_INTERFACE:
         return return_json({'success': False})
     output_ifconfig = check_output(['ifconfig', settings.WIFI_INTERFACE])
-    result = re.search(r'inet addr:([\d\.]+)', output_ifconfig)  # only supports ipv4
+    result = re.search(r'inet ([\d\.]+)', output_ifconfig)  # only supports ipv4
     if result:
         ip = result.group(1)
         output_iwconfig = check_output(['iwconfig', settings.WIFI_INTERFACE])

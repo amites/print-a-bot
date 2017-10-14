@@ -38,9 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'djconfig',
+
     # Apps
     'controls',
     #'rest_framework',
+    'djwifi.apps.DjWifiConfig',
 
     ]
 
@@ -77,6 +80,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'djconfig.middleware.DjConfigMiddleware',
 ]
 
 ROOT_URLCONF = 'Print_A_Bot.urls'
