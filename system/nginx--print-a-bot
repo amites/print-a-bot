@@ -1,0 +1,16 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    location = /favicon.ico {access_log off; log_not_found off; }
+    location /static/ {
+	root /home/pi/code/Print_A_Bot;
+    }
+
+    location / {
+	include proxy_params;
+	proxy_pass http://unix:/home/pi/code/Print_A_Bot/print-a-bot.sock;
+    }
+
+    client_max_body_size 2M;
+}
