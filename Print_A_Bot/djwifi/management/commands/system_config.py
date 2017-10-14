@@ -9,21 +9,12 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
-from djconfig import config
+from djconfig.models import Config
+
+from djwifi.forms import WifiForm
+
 
 logger = getLogger(__name__)
-
-LOG_NAMES = [
-    # 'gardengenie.log',
-    # 'apache-access.log',
-    # 'apache-access.log',
-]
-
-# SRC_PATH = path.abspath(path.join(path.dirname(settings.BASE_DIR), 'src'))
-# SYSTEM_PATH = path.join(settings.BASE_DIR, 'system')
-# CONFIG_PATH = path.join(SYSTEM_PATH, 'config')
-
-WIFI_PACKAGE = 'compat'
 
 
 class Command(BaseCommand):
@@ -68,21 +59,12 @@ class Command(BaseCommand):
 
     def __init__(self):
         self.dev = False
-        self.no_wifi = False
-        self.run_config = False
-        self.version = 0.00
+        
+        self.wifi_ssid = None
+        self.wifi_password = None
+        self.wifi_encryption = None
+        
         super(Command, self).__init__()
-
-    # user management #
-
-    @staticmethod
-    def _add_user_group(username=None, user_group=None):
-        if username is None:
-            username = settings.PROJECT_NAME
-        if user_group is None:
-            user_group = settings.USER_GROUP
-        logger.debug('adding user %s to group %s' % (username, user_group))
-        call(['addgroup', username, user_group])
 
     # server config #
 
@@ -97,31 +79,6 @@ class Command(BaseCommand):
         call(['service', 'ntp', 'stop'])
         call(['ntpdate', '-s', host])
         call(['service', 'ntp', 'start'])
-
-    # package management apt-get / dpkg #
-
-    def _install_packages(self):
-        self._apt_install()
-        self._apt_upgrade()
-        self._fix_dpkg()
-
-    @staticmethod
-    def _apt_upgrade():
-        logger.debug('running apt_upgrade')
-        call(['apt-get', 'update'])
-        call(['apt-get', 'upgrade', '-y'])
-
-    def _apt_install(self):
-        logger.debug('running apt_install')
-        programs = settings.APT_GET_PROGRAMS
-        if self.dev:
-            programs += settings.APT_GET_DEV
-        call(['apt-get', 'install', '-y'] + programs)
-
-    @staticmethod
-    def _fix_dpkg():
-        logger.info('running fix_dpkg')
-        call(['dpkg', '--configure', '-a'])
 
     @staticmethod
     def _kill_process(name):
@@ -162,53 +119,89 @@ class Command(BaseCommand):
         # config_save('wifi_interface', result.group(0))
         return True
 
+    def _configure_wifi(self):
+        try:
+            self.wifi_ssid = Config.objects.get(key='wifi_ssid').value.replace('+', ' ')
+            self.wifi_password = Config.objects.get(key='wifi_password').value
+            self.wifi_encryption = Config.objects.get(key='wifi_encryption').value
+        except Config.DoesNotExist as e:
+            raise ValueError('Config key {} does not exist'.format(e.message))
+
     def _set_wifi_network(self):
-        if not config.wifi_ssid:
-            logger.warning('Wifi ssid not configured, aborting network config.')
+        if not self.wifi_ssid:
+            logger.warning('wifi_ssid not configured, aborting network config.')
             return
 
-        encryption = config.wifi_encryption
-        if 'wpa' in encryption:
-            encryption = 'wpa'
-        elif 'wep' in encryption:
-            encryption = 'wep'
-        else:
-            encryption = False
+        wpa_conf_path = '/etc/wpa_supplicant/wpa_supplicant.conf'
 
-        context = {
-            'wifi_encryption': encryption,
-            'wifi_password': config.wifi_password,
-            'wifi_ssid': config.wifi_ssid,
-            'wifi_interface': config.wifi_interface,
+        encryption = self.wifi_encryption
+
+        with open(wpa_conf_path, 'r') as f:
+            wpa_data = f.read()
+
+        if re.search(self.wifi_ssid, wpa_data):
+            logger.info('SSID {} already configured'.format(self.wifi_ssid))
+            return
+
+        wpa_priorities = re.findall('priority=(\d+)', wpa_data)
+        wpa_priorities.sort()
+
+        wifi_data = {
+            'ssid': '"{}"'.format(self.wifi_ssid),
+            'priority': int(wpa_priorities[-1]) + 1,
         }
 
-        self._write_system_template('/etc/network/interfaces', 'interfaces', context)
+        if 'wpa' in encryption:
+            wpa_out = check_output(['wpa_passphrase', self.wifi_ssid, self.wifi_password])
+            wifi_data['psk'] = re.search('\tpsk=(.*)', wpa_out).group(1)
+
+            wpa_entry = '''network={{
+    ssid={ssid}
+    psk={psk}
+
+    proto=RSN
+    key_mgmt=WPA-PSK
+    pairwise=CCMP
+    auth_alg=OPEN
+    priority={priority}
+}}'''
+        else:
+            wpa_entry = '''network={{
+    ssid={ssid}
+    key_mgmt=NONE
+    priority={priority}
+}}'''
+
+        with open(wpa_conf_path, 'a') as f:
+            f.write('\n\n')
+            f.write(wpa_entry.format(**wifi_data))
+
         if not settings.DEBUG:
             call(['shutdown', '-r', 'now'])
 
     @staticmethod
     def _cycle_wifi(mode=None):
-        call(['ifdown', config.wifi_interface])
+        call(['ifdown', settings.WIFI_INTERFACE])
         if mode is not None:
-            call(['iwconfig', config.wifi_interface, 'mode', mode])
-        call(['ifup', config.wifi_interface])
+            call(['iwconfig', settings.WIFI_INTERFACE, 'mode', mode])
+        call(['ifup', settings.WIFI_INTERFACE])
 
     # wifi access point #
 
     @staticmethod
-    def _setup_wifi_vap():
+    def _setup_wifi_ap():
         try:
             check_output(['ifconfig', settings.WIFI_AP_NAME])
             logger.info('wifi vap %s already setup' % settings.WIFI_AP_NAME)
             return True
         except CalledProcessError:
             logger.info('Setting up virtual access point interface')
-        output = check_output(['ifconfig', config.wifi_interface])
-        logger.debug('ifconfig %s outout:\n%s' % (config.wifi_interface, output))
+        output = check_output(['ifconfig', settings.WIFI_INTERFACE])
+        logger.debug('ifconfig %s outout:\n%s' % (settings.WIFI_INTERFACE, output))
         # set MAC address for wap0 virtual device
         result = re.search(r'HWaddr (.*)', output)
         if not result:
-            logger.warning('Unable to find MAC address for %s skipping virtual device config' % config.wifi_interface)
+            logger.warning('Unable to find MAC address for %s skipping virtual device config' % settings.WIFI_INTERFACE)
             return
         grps = result.group(1).strip().split(':')
         hex_char = 'A' if grps[0][1] != 'A' else '6'
@@ -218,7 +211,7 @@ class Command(BaseCommand):
         #                                                                'interface', 'add', settings.WIFI_AP_NAME,
         #                                                                'type', '__ap']))
         call(['iw', 'phy', settings.WIFI_PHY_INTERFACE, 'interface', 'add', settings.WIFI_AP_NAME, 'type', '__ap'])
-        logger.debug('added %s virtual device on phy %s' % (config.wifi_interface, settings.WIFI_PHY_INTERFACE))
+        logger.debug('added %s virtual device on phy %s' % (settings.WIFI_INTERFACE, settings.WIFI_PHY_INTERFACE))
         call(['ifconfig', settings.WIFI_AP_NAME, 'hw', 'ether', fake_mac])
         logger.debug('set wap0 HW address to %s' % fake_mac)
         call(['ifconfig', settings.WIFI_AP_NAME, settings.WIFI_AP_IP, 'netmask', '255.255.255.0'])
@@ -279,67 +272,22 @@ class Command(BaseCommand):
                     logger.info('zeroing out file: %s' % file_path)
                     system('> %s' % file_path)
 
-    # beaglebone black #
-
-    @staticmethod
-    def _disable_usr_led(usr_led=0):
-        system('echo none > /sys/class/leds/beaglebone\:green\:usr%s/trigger' % usr_led)
-
-    @staticmethod
-    def __config_dev():
-
-        settings_path = path.join(settings.PROJECT_PATH, settings.PROJECT_NAME, 'local_settings.py')
-        system('printf "from dev_settings import *\nDEBUG=True" > %s' % settings_path)
-        call(['chown', '%s:%s' % (settings.PROJECT_NAME, settings.USER_GROUP), settings_path])
-        # call_command('loaddata', 'operations/fixtures/dev_pins.json')
-
     def handle(self, *args, **options):
         print 'running handle'
 
         logger.info('Running system_config with options:\n\t%s' % str(options))
 
-        # register_config(SettingForm)
-        # register_config(WifiForm)
-
         self.dev = options.get('dev', False)
-        self.no_wifi = options.get('no_wifi', False)
-
-        if options.get('run_config', False):
-            try:
-                self.version = float(config.version_unit)
-            except TypeError:
-                self.version = 0.00
-            # self.__config_0_01()
-            # self.__config_0_02()
-            if self.dev:
-                self.__config_dev()
 
         if options.get('cleanup'):
             self._clean_logs()
             self._configure_ntp()
 
-        if options.get('install_packages', False):
-            self._install_packages()
-
-        if options.get('disable_heartbeat', False):
-            self._disable_usr_led(usr_led=0)
-
         if options.get('configure_ntp', False):
             self._configure_ntp()
 
-        # if options.get('update_host', False):
-        #     self.configure_host()
-
-        # if options.get('set_timezone', False):
-        #     self.set_timezone()
-
-        # configure GPIO Pins
-        # if options.get('pins_on', False):
-        #     self._set_pins(True)
-        # if options.get('pins_off', False):
-        #     self._set_pins(False)
-
         if options.get('set_wifi', False):
+            self._configure_wifi()
             self._set_wifi_network()
         # configure access point
         if options.get('ap_on', False):
