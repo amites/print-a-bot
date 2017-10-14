@@ -1,10 +1,10 @@
-{% extends 'operations/base.html' %}
+{% extends 'base.html' %}
 
 {% load i18n %}
 
 {% block meta_title %}{% trans 'Configure Wifi' %}{% endblock %}
 
-{% block main %}
+{% block content %}
     {% if configured %}
         <div id="wifi-current-wrapper"></div>
         <div id="wifi-wrapper">

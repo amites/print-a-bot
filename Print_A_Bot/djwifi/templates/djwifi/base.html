@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}{% endblock %}
+    <script src="{{ STATIC_URL }}js/libs/jquery-1.11.2.js"></script>
+    <!--[if lt IE 9]><script src="{{ STATIC_URL }}js/html5shiv.js"></script><![endif]-->
+{% endblock %}
+
+{% block extra_js %}
+{% include "includes/handlebars_scripts.html" %}
+{% include "includes/footer_scripts.html" %}
+{% block extra_scripts %}{% endblock %}
+{% block extra_js %}{% endblock %}
+</body>
+</html>

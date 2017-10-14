@@ -3,4 +3,8 @@ from __future__ import unicode_literals
 
 from django.contrib import admin
 
-# Register your models here.
+from controls.models import LightShow, LightShowStep
+
+
+admin.site.register(LightShow)
+admin.site.register(LightShowStep)

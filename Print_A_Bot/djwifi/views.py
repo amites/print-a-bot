@@ -10,7 +10,7 @@ from django.utils.translation import ugettext as _
 from djwifi.forms import WifiForm
 from djwifi.iw_parse import call_iwlist, get_djwifi_list
 from general.utils_view import return_json, return_success_msg
-from controls.utils import call_sudo_command
+from controls.utils.system import call_sudo_command
 
 
 logger = getLogger(__name__)
