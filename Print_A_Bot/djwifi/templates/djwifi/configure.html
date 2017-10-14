@@ -98,6 +98,7 @@
         </div>
         <input type="hidden" name="wifi_ssid" value="{% verbatim %}{{ essid }}{% endverbatim %}">
 {#        <input type="hidden" name="network_id" value="{% verbatim %}{{ network_id }}{% endverbatim %}">#}
+            {% csrf_token %}
     </form>
 </script>
 

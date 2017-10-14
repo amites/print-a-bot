@@ -59,6 +59,27 @@ function load_ajax_modal(url, action, template_id, callback, title) {
     });
 }
 
+function bind_modal(selector) {
+    // {# Set a default selector string. #}
+    selector = typeof selector !== 'undefined' ? selector : '[data-toggle="modal"][data-href]';
+
+    var obj = $(this);
+    var selector_obj = $(selector);
+
+    selector_obj.on('click', function () {
+        var url = $(this).attr('data-href');
+        var action = $(this).attr('data-action') || false;
+        load_ajax_modal(url, action, null, null, obj.text())
+
+        var event = selector_obj.attr('data-event');
+        // {# console.log('event: '+event); #}
+        if (event) {
+            $(document).trigger(event);
+        }
+
+    });
+}
+
 function show_modal_content(content, title, footer) {
     var modal_obj = $(modal_id);
     var content_obj = $(modal_id+' .modal-content');
@@ -74,3 +95,26 @@ function show_modal_content(content, title, footer) {
 
     modal_obj.modal('show');
 }
+
+// Handlebars helpers //
+
+Handlebars.registerHelper('to_lower', function(str) {
+    return str.toLowerCase();
+});
+
+Handlebars.registerHelper('to_upper', function(str) {
+    return str.toUpperCase();
+});
+
+Handlebars.registerHelper('to_title', function(str) {
+    return str.charAt(0).toUpperCase() + str.substring(1);
+});
+
+Handlebars.registerPartial('waiting', $('#template-waiting').html());
+
+Handlebars.registerHelper('if_equals', function(v1, v2, options) {
+  if(v1 === v2) {
+    return options.fn(this);
+  }
+  return options.inverse(this);
+});

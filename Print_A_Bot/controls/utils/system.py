@@ -19,7 +19,7 @@ def call_sudo_command(command, **kwargs):
         else:
             cmd_args.append('--{}={}'.format(k, v))
     logger.debug('making sudo command call %s %s' % (command, ' '.join(cmd_args)))
-    call(['sudo', 'python', path.join(settings.DIRNAME, 'manage.py'), command] + cmd_args)
+    call(['sudo', 'python', path.join(settings.BASE_DIR, 'manage.py'), command] + cmd_args)
 
 
 def process_running(name):
