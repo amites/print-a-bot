@@ -1,0 +1,12 @@
+[Unit]
+Description=Gunicorn Print-A-Bot Daemon
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/home/pi/code/Print_A_Bot
+ExecStart=/usr/local/bin/gunicorn --workers 2 --bind unix:/home/pi/code/Print_A_Bot/print-a-bot.sock Print_A_Bot.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
