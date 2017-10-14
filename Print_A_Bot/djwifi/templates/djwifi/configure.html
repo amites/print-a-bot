@@ -57,12 +57,6 @@
         </tbody>
     </table>
 {% endverbatim %}
-{% comment %}
-                <td>
-                    <i class="fa fa-sign-in login"></i> &nbsp;
-                    <i class="fa fa-cog configure"></i>
-                </td>
-{% endcomment %}
 </script>
 
 <script id="template-wifi-configure" type="text/x-handlebars-template">
@@ -97,8 +91,7 @@
             <button type="submit" class="btn btn-primary">{% trans 'Save changes' %}</button>
         </div>
         <input type="hidden" name="wifi_ssid" value="{% verbatim %}{{ essid }}{% endverbatim %}">
-{#        <input type="hidden" name="network_id" value="{% verbatim %}{{ network_id }}{% endverbatim %}">#}
-            {% csrf_token %}
+        {% csrf_token %}
     </form>
 </script>
 
@@ -128,7 +121,6 @@
 
     function configure_wifi(network_id) {
         window.access_point = window.access_points[network_id];
-{#        window.access_point.network_id = network_id;#}
 
         console.log('access_point');
         console.log(window.access_point);
@@ -166,7 +158,6 @@
                     wifi_encryption: false
             }, function(data) {
             $('#modal-body').html(template({msg: '{% trans 'Please wait, connecting to' %} '+data['essid']+'.'}));
-{#            watch_wifi_status();#}
         });
     }
 
@@ -211,7 +202,7 @@
 
         $.getJSON('{% url 'wifi:list' %}', function(data) {
             if (data.msg && data.msg.length) {
-                notify_data(msg);
+                notify_data(data.msg);
             }
             if (data.access_points.length == 0 || !data.success) {
                 {# TODO: add waiting message #}
@@ -242,7 +233,6 @@
             notify_data(data);
             var template = Handlebars.compile($('#template-waiting').html());
             show_modal_content(template(data));
-{#            watch_wifi_status();#}
         });
     }
 

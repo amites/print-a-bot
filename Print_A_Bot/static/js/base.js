@@ -1,7 +1,7 @@
 var modal_id = '#ajax-modal';
 
 function notify_data(data, width, delay) {
-    if (data.msg.length > 0) {
+    if (typeof data.msg !== 'undefined' && data.msg.length > 0) {
         $.bootstrapGrowl(data.msg, {
             type: ((data.success) ? 'success' : 'error')
             ,align: 'center'
