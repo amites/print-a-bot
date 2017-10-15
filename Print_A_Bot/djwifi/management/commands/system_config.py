@@ -199,7 +199,8 @@ class Command(BaseCommand):
         call(['service', 'hostapd', 'start'])
         call(['service', 'dnsmasq', 'start'])
 
-        logger.info('Access point started')
+        logger.info('Access point will be started -- rebooting')
+        call(['reboot', ])
 
     def _disable_wifi_ap(self):
         call(['systemctl', 'disable', 'hostapd', ])
@@ -215,6 +216,9 @@ class Command(BaseCommand):
         call(['service', 'dnsmasq', 'stop'])
 
         self._disable_wifi_ap()
+
+        logger.info('Access point disabled -- rebooting')
+        call(['reboot', ])
 
     # linux system #
 
@@ -263,5 +267,4 @@ class Command(BaseCommand):
             self._ap_stop()
 
         if options.get('shutdown', False):
-            # self._set_pins(False)
             self._clean_logs()
