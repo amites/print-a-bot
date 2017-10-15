@@ -2,12 +2,6 @@
 
 {% load static %}
 
-{% block extra_head %}
-    <!--[if lt IE 9]><script src="{% static 'js/html5shiv.js' %}"></script><![endif]-->
-  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}">
-  <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
-{% endblock %}
-
 {% block extra_js %}
     {% include 'includes/handlebars_scripts.html' %}
     {% include 'includes/footer_scripts.html' %}

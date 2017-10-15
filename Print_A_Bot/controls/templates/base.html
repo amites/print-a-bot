@@ -7,8 +7,10 @@
 	
 	<title>{% block title %}{% endblock title %}</title>
 
+  <!--[if lt IE 9]><script src="{% static 'js/html5shiv.js' %}"></script><![endif]-->
+  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
   {% block extra_head %}{% endblock %}
-
 </head>
 
 <body>
