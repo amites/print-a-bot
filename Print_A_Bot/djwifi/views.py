@@ -91,6 +91,15 @@ def wifi_connect(request):
     return return_success_msg(request, _('No wifi specified, aborting.'), redirect(reverse('wifi:home')), False)
 
 
+def wifi_disconnect(request):
+    call(['ifconfig', settings.WIFI_INTERFACE, 'down'])
+    # overwrite network interfaces?
+    # call_sudo_command('system_config', )
+    return return_success_msg(request, _('Print-a-Bot will disconnect from the network momentarily.'
+                                         'You should be able to connect to it as an access point shortly.'),
+                              redirect(reverse('wifi:home')), kwargs={'new_url': 'http://%s' % settings.WIFI_AP_IP})
+
+
 def access_point(request):
     """
     Turn on access point mode.
