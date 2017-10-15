@@ -40,10 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'djconfig',
+    'rest_framework',
 
     # Apps
     'controls',
-    #'rest_framework',
     'djwifi.apps.DjWifiConfig',
 
     ]

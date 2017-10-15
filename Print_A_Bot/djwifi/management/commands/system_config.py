@@ -3,15 +3,12 @@ from datetime import datetime
 from logging import getLogger
 from os import path, remove, rename, system
 from subprocess import call, check_output, CalledProcessError
-from time import sleep
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from djconfig.models import Config
-
-from djwifi.forms import WifiForm
 
 
 logger = getLogger(__name__)
@@ -156,11 +153,10 @@ class Command(BaseCommand):
 }}'''
 
         with open(wpa_conf_path, 'a') as f:
-            f.write('\n\n')
+            f.write('\n')
             f.write(wpa_entry.format(**wifi_data))
 
-        if not settings.DEBUG:
-            call(['shutdown', '-r', 'now'])
+        call(['reboot', ])
 
     @staticmethod
     def _cycle_wifi(mode=None):
@@ -170,22 +166,21 @@ class Command(BaseCommand):
         call(['ifup', settings.WIFI_INTERFACE])
 
     # wifi access point #
-
     def _setup_wifi_ap(self):
+        context = self._get_ap_context()
         try:
-            check_output(['ifconfig', settings.WIFI_AP_NAME])
-            logger.info('wifi ap %s already setup' % settings.WIFI_AP_NAME)
+            check_output(['ifconfig', context['hostname']])
+            logger.info('wifi ap {} already setup'.format(context['hostname']))
             return True
         except CalledProcessError:
             logger.info('Setting up virtual access point interface')
         call(['service', 'hostapd', 'stop'])
         call(['service', 'dnsmasq', 'stop'])
-        context = self._get_ap_context()
 
         self._write_system_template('/etc/dnsmasq.conf', 'access_point/dnsmasq.conf')
         self._write_system_template('/etc/hostapd/hostapd.conf', 'access_point/hostapd.conf', context)
-        self._write_system_template('/etc/network/interfaces', 'access_point/interfaces', context)
-        self._write_system_template('/etc/default/hostapd', 'access_point/default_hostapd', context)
+        self._write_system_template('/etc/network/interfaces', 'access_point/interfaces.conf', context)
+        self._write_system_template('/etc/default/hostapd', 'access_point/default_hostapd.conf', context)
         self._write_system_template('/etc/dhcpcd.conf', 'access_point/dhcpcd.conf', context)
         
         call(['systemctl', 'enable', 'hostapd', ])
@@ -207,7 +202,7 @@ class Command(BaseCommand):
         call(['systemctl', 'disable', 'dnsmasq', ])
 
         context = self._get_ap_context()
-        self._write_system_template('/etc/network/interfaces', 'interfaces', context)
+        self._write_system_template('/etc/network/interfaces', 'interfaces.conf', context)
         self._write_system_template('/etc/dhcpcd.conf', 'dhcpcd.conf', context)
 
     def _ap_stop(self):
@@ -256,6 +251,7 @@ class Command(BaseCommand):
             self._clean_logs()
 
         if options.get('set_wifi', False):
+            self._disable_wifi_ap()
             self._configure_wifi()
             self._set_wifi_network()
 
