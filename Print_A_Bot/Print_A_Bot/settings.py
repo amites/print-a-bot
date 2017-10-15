@@ -15,6 +15,7 @@ from os import path
 # Build paths inside the project like this: path.join(BASE_DIR, ...)
 BASE_DIR = path.dirname(path.dirname(path.abspath(__file__)))
 
+PROJECT_NAME = 'print-a-bot'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -160,6 +161,8 @@ STATICFILES_DIRS = [
  ]
 
 WIFI_INTERFACE = 'wlan0'
+WIFI_PASSWORD = 'password'
+
 
 # Override settings to match environment
 try:

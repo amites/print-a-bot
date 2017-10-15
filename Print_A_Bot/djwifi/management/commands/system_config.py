@@ -43,7 +43,47 @@ class Command(BaseCommand):
         
         super(Command, self).__init__()
 
-    # server config #
+    #################
+    # System Config #
+    #################
+
+    @staticmethod
+    def _write_system_template(file_path, template, context=None):
+        if path.exists(file_path):
+            # backup old file
+            rename(file_path, '%s--%s' % (file_path, datetime.now().strftime('%Y-%m-%d--%H-%M')))
+        with open(file_path, 'w+') as f:
+            f.write(render_to_string('system/{}'.format(template), context if context else {}))
+
+    def _get_ap_context(self, hostname=None):
+        if hostname is None:
+            hostname = getattr(settings, 'HOST_NAME', settings.PROJECT_NAME)
+
+        return {
+            'hostname': str(hostname),
+            'ssid': str(hostname),
+            'password': settings.WIFI_PASSWORD,
+        }
+
+    def _set_hostname(self, hostname=None):
+        context = self._get_ap_context()
+
+        logger.info('setting hostname to {hostname}'.format(**context))
+
+        # hosts
+        self._write_system_template('/etc/hosts', 'hosts', context)
+
+        # hostname
+        hostname_path = '/etc/hostname'
+        call(['rm', hostname_path])
+        with open(hostname_path, 'w+') as f:
+            f.write(context['hostname'])
+        call(['hostname', context['hostname']])
+
+        call(['service', 'avahi-daemon', 'restart'])
+
+        # hostapd
+        self._write_system_template('/etc/hostapd/hostapd.conf', 'access_point/hostapd.conf', context)
 
     @staticmethod
     def _kill_process(name):
@@ -131,64 +171,50 @@ class Command(BaseCommand):
 
     # wifi access point #
 
-    @staticmethod
-    def _setup_wifi_ap():
+    def _setup_wifi_ap(self):
         try:
             check_output(['ifconfig', settings.WIFI_AP_NAME])
-            logger.info('wifi vap %s already setup' % settings.WIFI_AP_NAME)
+            logger.info('wifi ap %s already setup' % settings.WIFI_AP_NAME)
             return True
         except CalledProcessError:
             logger.info('Setting up virtual access point interface')
-        output = check_output(['ifconfig', settings.WIFI_INTERFACE])
-        logger.debug('ifconfig %s outout:\n%s' % (settings.WIFI_INTERFACE, output))
-        # set MAC address for wap0 virtual device
-        result = re.search(r'HWaddr (.*)', output)
-        if not result:
-            logger.warning('Unable to find MAC address for %s skipping virtual device config' % settings.WIFI_INTERFACE)
-            return
-        grps = result.group(1).strip().split(':')
-        hex_char = 'A' if grps[0][1] != 'A' else '6'
-        grps[0] = grps[0][0] + hex_char
-        fake_mac = ':'.join(grps)
-        # logger.debug('creating wap0 virtual device:\n\t%s' % ' '.join(['iw', 'phy', settings.WIFI_PHY_INTERFACE,
-        #                                                                'interface', 'add', settings.WIFI_AP_NAME,
-        #                                                                'type', '__ap']))
-        call(['iw', 'phy', settings.WIFI_PHY_INTERFACE, 'interface', 'add', settings.WIFI_AP_NAME, 'type', '__ap'])
-        logger.debug('added %s virtual device on phy %s' % (settings.WIFI_INTERFACE, settings.WIFI_PHY_INTERFACE))
-        call(['ifconfig', settings.WIFI_AP_NAME, 'hw', 'ether', fake_mac])
-        logger.debug('set wap0 HW address to %s' % fake_mac)
-        call(['ifconfig', settings.WIFI_AP_NAME, settings.WIFI_AP_IP, 'netmask', '255.255.255.0'])
-        logger.debug('setup wap0 to ip %s' % settings.WIFI_AP_IP)
-        logger.info('wifi vap %s setup' % settings.WIFI_AP_NAME)
+        call(['service', 'hostapd', 'stop'])
+        call(['service', 'dnsmasq', 'stop'])
+        context = self._get_ap_context()
+
+        self._write_system_template('/etc/dnsmasq.conf', 'access_point/dnsmasq.conf')
+        self._write_system_template('/etc/hostapd/hostapd.conf', 'access_point/hostapd.conf', context)
+        self._write_system_template('/etc/network/interfaces', 'access_point/interfaces', context)
+        self._write_system_template('/etc/default/hostapd', 'access_point/default_hostapd', context)
+        self._write_system_template('/etc/dhcpcd.conf', 'access_point/dhcpcd.conf', context)
+        
+        call(['systemctl', 'enable', 'hostapd', ])
+        call(['systemctl', 'enable', 'dnsmasq', ])
         return True
 
     def _ap_start(self):
         logger.info('Starting access point')
-        self._setup_wifi_vap()
+        self._setup_wifi_ap()
 
-        call(['ifconfig', settings.WIFI_AP_NAME, settings.WIFI_AP_IP, 'up'])
-        logger.debug('brought up wap0 interface')
-        # service fails silent with debian 1.0 hostapd package
-        # call(['service', 'hostapd', 'restart'])
-        self._kill_process('hostapd')
-        call(['hostapd', '-B', '/etc/hostapd/hostapd.conf'])
-        sleep(2)  # allow hostapd to start first
-        call(['service', 'dnsmasq', 'restart'])
+        call(['service', 'hostapd', 'start'])
+        call(['service', 'dnsmasq', 'start'])
+
         logger.info('Access point started')
+
+    def _disable_wifi_ap(self):
+        call(['systemctl', 'disable', 'hostapd', ])
+        call(['systemctl', 'disable', 'dnsmasq', ])
+
+        context = self._get_ap_context()
+        self._write_system_template('/etc/network/interfaces', 'interfaces', context)
+        self._write_system_template('/etc/dhcpcd.conf', 'dhcpcd.conf', context)
 
     def _ap_stop(self):
         logger.info('Stopping access point')
-        # service calls don't always stop
-        call(['service', 'dnsmasq', 'stop'])
         call(['service', 'hostapd', 'stop'])
-        sleep(1)
-        self._kill_process('dnsmasq')
-        self._kill_process('hostapd')
-        try:
-            call(['iw', 'dev', settings.WIFI_AP_NAME, 'del'])
-        except CalledProcessError:
-            logger.info('%s not currently available' % settings.WIFI_AP_NAME)
-        logger.info('access point stopped')
+        call(['service', 'dnsmasq', 'stop'])
+
+        self._disable_wifi_ap()
 
     # linux system #
 
