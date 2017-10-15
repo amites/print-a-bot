@@ -21,6 +21,8 @@ class Command(BaseCommand):
                             help=_('Set system timezone from config.')),
         parser.add_argument('--cleanup', action='store_true', dest='cleanup', default=False,
                             help=_('Clean up system to maintain stability.')),
+        parser.add_argument('--reboot', action='store_true', dest='reboot', default=False,
+                            help=_('Reboot after previous commands complete.'))
         parser.add_argument('--shutdown', action='store_true', dest='shutdown', default=False,
                             help=_('Run shutdown scripts.'))
 
@@ -52,7 +54,8 @@ class Command(BaseCommand):
         with open(file_path, 'w+') as f:
             f.write(render_to_string('system/{}'.format(template), context if context else {}))
 
-    def _get_ap_context(self, hostname=None):
+    @staticmethod
+    def _get_ap_context(hostname=None):
         if hostname is None:
             hostname = getattr(settings, 'HOST_NAME', settings.PROJECT_NAME)
 
@@ -156,8 +159,6 @@ class Command(BaseCommand):
             f.write('\n')
             f.write(wpa_entry.format(**wifi_data))
 
-        call(['reboot', ])
-
     @staticmethod
     def _cycle_wifi(mode=None):
         call(['ifdown', settings.WIFI_INTERFACE])
@@ -194,8 +195,7 @@ class Command(BaseCommand):
         call(['service', 'hostapd', 'start'])
         call(['service', 'dnsmasq', 'start'])
 
-        logger.info('Access point will be started -- rebooting')
-        call(['reboot', ])
+        logger.info('Access point will be started')
 
     def _disable_wifi_ap(self):
         call(['systemctl', 'disable', 'hostapd', ])
@@ -212,10 +212,14 @@ class Command(BaseCommand):
 
         self._disable_wifi_ap()
 
-        logger.info('Access point disabled -- rebooting')
-        call(['reboot', ])
+        logger.info('Access point disabled')
 
     # linux system #
+
+    @staticmethod
+    def _reboot():
+        logger.info('Rebooting system')
+        call(['reboot', ])
 
     @staticmethod
     def _clean_logs(size=None):
@@ -261,6 +265,9 @@ class Command(BaseCommand):
 
         if options.get('ap_off', False):
             self._ap_stop()
+
+        if options.get('reboot', False):
+            self._reboot()
 
         if options.get('shutdown', False):
             self._clean_logs()
