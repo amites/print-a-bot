@@ -1,0 +1,12 @@
+/* DJ Wifi */
+#wifi-list {
+  font-size: 2em;
+  line-height: 200%;
+}
+#wifi-list .fa:hover, #wifi-list .fa.fa-check-circle-o {
+  cursor: pointer;
+  color: #7ca63a;
+}
+#wifi-list tbody tr:hover {
+  cursor: pointer;
+}
