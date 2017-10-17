@@ -161,6 +161,9 @@ class Command(BaseCommand):
 
     @staticmethod
     def _cycle_wifi(mode=None):
+        """
+        utility to support switching wifi networks
+        """
         call(['ifdown', settings.WIFI_INTERFACE])
         if mode is not None:
             call(['iwconfig', settings.WIFI_INTERFACE, 'mode', mode])
@@ -168,6 +171,9 @@ class Command(BaseCommand):
 
     # wifi access point #
     def _setup_wifi_ap(self):
+        """
+        setup RPi to act as a "access point" / hotspot
+        """
         context = self._get_ap_context()
         try:
             check_output(['ifconfig', context['hostname']])
@@ -198,6 +204,9 @@ class Command(BaseCommand):
         logger.info('Access point will be started')
 
     def _disable_wifi_ap(self):
+        """
+        disable wifi access point -- required to connect to another network 
+        """
         call(['systemctl', 'disable', 'hostapd', ])
         call(['systemctl', 'disable', 'dnsmasq', ])
 
@@ -206,6 +215,9 @@ class Command(BaseCommand):
         self._write_system_template('/etc/dhcpcd.conf', 'dhcpcd.conf', context)
 
     def _ap_stop(self):
+        """
+        Stop and disable the access point if enabled 
+        """
         logger.info('Stopping access point')
         call(['service', 'hostapd', 'stop'])
         call(['service', 'dnsmasq', 'stop'])
@@ -245,8 +257,6 @@ class Command(BaseCommand):
                     system('> %s' % file_path)
 
     def handle(self, *args, **options):
-        print 'running handle'
-
         logger.info('Running system_config with options:\n\t%s' % str(options))
 
         self.dev = options.get('dev', False)

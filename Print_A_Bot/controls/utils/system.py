@@ -30,6 +30,9 @@ def call_sudo_command(command, new_process=False, **kwargs):
 
 
 def process_running(name):
+    """
+    Check if a process with the given name is running.
+    """
     output = subprocess.check_output(['ps', 'aux', '--cols', '200'])  # prevent ps from trimming columns
     if not output.count(name):
         logger.debug('No process named %s' % name)

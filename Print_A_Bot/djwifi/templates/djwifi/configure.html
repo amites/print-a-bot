@@ -161,23 +161,6 @@
         });
     }
 
-    {% comment %}
-        function watch_wifi_status() {
-        $.getJSON('{% url 'wifi:status' %}', function(data) {
-            console.log('polled wifi status');
-            console.log(data);
-            if (data.connecting) {
-                $('#modal-body h3').text(data.msg);
-                setTimeout(watch_wifi_status, 2500);
-            } else {
-                current_wifi();
-                $(modal_id).modal('hide');
-                notify_data(data);
-            }
-        });
-    }
-    {% endcomment %}
-
     function current_wifi() {
         $.getJSON('{% url 'wifi:current' %}', function(data) {
             console.log(data);
