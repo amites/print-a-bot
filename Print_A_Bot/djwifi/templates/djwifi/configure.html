@@ -1,0 +1,229 @@
+{% extends 'djwifi/base.html' %}
+
+{% load i18n %}
+
+{% block meta_title %}{% trans 'Configure Wifi' %}{% endblock %}
+
+{% block content %}
+    {% if configured %}
+        <div id="wifi-current-wrapper"></div>
+        <div id="wifi-wrapper">
+            <div class="text-center">
+                <i class="fa fa-spinner fa-spin fa-5x"></i>
+            </div>
+        </div>
+    {% else %}
+        <h1 class="text-center">{% trans 'Wifi not available.' %}</h1>
+    {% endif %}
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script id="template-wifi-current" type="text/x-handlebars-template">
+    <div class="panel panel-default text-center">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                {% trans 'Connected to' %} {% verbatim %}{{ essid }}{% endverbatim %}
+            </h3>
+        </div>
+        <div class="panel-body">
+            {% verbatim %}{{ quality }}%{% endverbatim %} {% trans 'signal' %}
+            - IP: {% verbatim %}{{ ip }}{% endverbatim %}
+            <i class="fa fa-sign-out" id="wifi-current-disconnect"></i>
+        </div>
+    </div>
+</script>
+
+<script id="template-wifi-list" type="text/x-handlebars-template">
+    <table class="table table-striped table-hover text-center" id="wifi-list">
+        <thead>
+            <tr>
+                <th class="text-center">
+                    <i id="scan-networks" class="fa fa-refresh"></i>
+                    {% trans 'Name' %}</th>
+                <th class="text-center">{% trans 'Encryption' %}</th>
+                <th class="text-center">{% trans 'Signal Quality' %}</th>
+            </tr>
+        </thead>
+{% verbatim %}
+        <tbody>
+            {{#each access_points }}
+            <tr data-id="{{ @key }}">
+                <td>{{ essid }}</td>
+                <td>{{ encryption }} {{#if known }}<i class="fa fa-check-circle-o login"></i>{{/if }}</td>
+                <td>{{ quality }}%</td>
+            </tr>
+            {{/each }}
+        </tbody>
+    </table>
+{% endverbatim %}
+</script>
+
+<script id="template-wifi-configure" type="text/x-handlebars-template">
+    <form id="wifi-config-form">
+        <div class="modal-body" id="configModalText">
+            <div class="form-group">
+                <label for="configModalESSID">{% trans 'Name' %}</label>
+                {% verbatim %}
+                    <input type="text" class="form-control" name="wicd-essid" {{#if essid }}value="{{ essid }}" disabled{{else}}placeholder="Network ESSID"{{/if }}>
+                {% endverbatim %}
+            </div>
+            <div class="form-group">
+                <label for="configModalEncryption">{% trans 'Encryption' %}</label>
+                <p class="help-block">{% trans 'Encryption is' %} {% verbatim %}{{ encryption }}{% endverbatim %}</p>
+                <select id="configModalEncryption" name="wifi_encryption" class="form-control selectpicker">
+                    <option value=""{% verbatim %}{{#if_equals encryption 'Off' }} selected{{/if_equals }}{% endverbatim %}>{% trans 'None' %}</option>
+                    <option data-divider="true"></option>
+                    <option value="wpa">{% trans 'WPA 1/2 (Hex [0-9/A-F])' %}</option>
+                    <option value="wpa-psk"{% verbatim %}{{#if_equals encryption 'WPA' }} selected{{/if_equals }}{{#if_equals encryption 'WPA2' }} selected{{/if_equals }}{% endverbatim %}>{% trans 'WPA 1/2 (Passphrase)' %}</option>
+                    <option data-divider="true"></option>
+                    <option value="wep-hex">{% trans 'WEP (Hex [0-9/A-F])' %}</option>
+                    <option value="wep-passphrase"{% verbatim %}{{#if_equals encryption 'WEP' }} selected{{/if_equals }}{% endverbatim %}>{% trans 'WEP (Passphrase)' %}</option>
+                </select>
+
+                <input type="password" id="passkey" class="form-control" name="wifi_password" placeholder="Password">
+                <p class="help-block">{% trans 'Passphrase or hex key depending on the encryption type selected.' %}</p>
+                <input id="show-password" type="checkbox"/> {% trans 'Show password' %}
+            </div>
+        </div>
+        <div class="modal-footer text-center">
+            <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
+            <button type="submit" class="btn btn-primary">{% trans 'Save changes' %}</button>
+        </div>
+        <input type="hidden" name="wifi_ssid" value="{% verbatim %}{{ essid }}{% endverbatim %}">
+        {% csrf_token %}
+    </form>
+</script>
+
+<script id="template-wifi-submit" type="text/x-handlebars-template">
+    <div id="wifi-submit-wrapper" class="jumbotron text-center">
+        <h2>{% trans 'Garden Genie is Attempting to connect to' %} {% verbatim %}{{ essid }}{% endverbatim %}.</h2>
+
+        <p>
+            {% verbatim %}{{> waiting }}{% endverbatim %}
+        </p>
+
+        <p>{% trans 'When the light on your garden genie turns green you can check in through the cloud.' %}</p>
+        <p>{% trans 'Please re-connect to your regular wifi network and feel free to check back in with the Local button below.' %}</p>
+
+        <div class="row">
+            <div class="col-xs-6 col-sm-3 col-md-1 col-sm-offset-3 col-md-offset-5">
+                <a class="btn btn-success" href="http://gardengenie.local">{% trans 'Local' %}</a></div>
+            <div class="col-xs-6 col-sm-3 col-md-1">
+                <a class="btn btn-success" href="http://www.solargreens.net">{% trans 'Cloud' %}</a></div>
+        </div>
+    </div>
+</script>
+
+<script>
+    window.access_points = null;
+    window.access_point = null;
+
+    function configure_wifi(network_id) {
+        window.access_point = window.access_points[network_id];
+
+        console.log('access_point');
+        console.log(window.access_point);
+        if (window.access_point.encrypted) {
+            var template = Handlebars.compile($('#template-wifi-configure').html());
+            show_modal_content(template(window.access_point));
+
+            $('#show-password').change(function() {
+                var pass_type = ($(this).prop('checked')) ? 'text' : 'password';
+                $('#passkey').prop('type', pass_type);
+            });
+
+            $('#wifi-config-form').submit(function(e) {
+                e.preventDefault();
+
+                var wrapper = $('#modal-body');
+                var waiting_html = Handlebars.compile($('#template-waiting').html());
+                wrapper.html(waiting_html({msg: '{% trans 'Saving configuration' %}'}));
+
+                $.post('{% url 'wifi:connect' %}', $(this).serialize(), function(data) {
+                    $(modal_id).modal('hide');
+                    notify_data(data);
+                });
+            });
+        } else {
+            connect_wifi(network_id);
+        }
+    }
+
+    function connect_wifi(network_id) {
+        var template = Handlebars.compile($('#template-waiting').html());
+        show_modal_content(template({msg: '{% trans 'Connecting' %}...'}));
+        $.post('{% url 'wifi:connect' %}', {
+                    wifi_ssid: window.access_point.essid,
+                    wifi_encryption: false
+            }, function(data) {
+            $('#modal-body').html(template({msg: '{% trans 'Please wait, connecting to' %} '+data['essid']+'.'}));
+        });
+    }
+
+    function current_wifi() {
+        $.getJSON('{% url 'wifi:current' %}', function(data) {
+            console.log(data);
+            if (data.success) {
+                var template = Handlebars.compile($('#template-wifi-current').html());
+                {# TODO: transition wifi-current display? #}
+                $('#wifi-current-wrapper').html(template(data));
+
+                $('#wifi-current-disconnect').click(function () {
+                    disconnect_wifi();
+                });
+            } else {
+                $('#wifi-current-wrapper').html('<div class="text-center">{% trans 'Not connected' %}</div>');
+            }
+        });
+    }
+
+    function display_wifi() {
+        var wrapper = $('#wifi-wrapper');
+        var waiting_html = Handlebars.compile($('#template-waiting').html());
+        wrapper.html(waiting_html());
+
+        $.getJSON('{% url 'wifi:list' %}', function(data) {
+            if (data.msg && data.msg.length) {
+                notify_data(data.msg);
+            }
+            if (data.access_points.length == 0 || !data.success) {
+                {# TODO: add waiting message #}
+                setTimeout(display_wifi, 2500);
+                return
+            }
+            window.access_points = data.access_points;
+
+            var template = Handlebars.compile($('#template-wifi-list').html());
+
+            wrapper.html(template(data));
+
+            $('#scan-networks').click(function() {
+                console.log('clicked on scan-networks')
+                display_wifi();
+            });
+
+            $('#wifi-list tbody tr').click(function() {
+                var network_id = $(this).data('id');
+                configure_wifi(network_id);
+            });
+
+        });
+    }
+
+    function disconnect_wifi() {
+        $.getJSON('{% url 'wifi:disconnect' %}', function(data) {
+            notify_data(data);
+            var template = Handlebars.compile($('#template-waiting').html());
+            show_modal_content(template(data));
+        });
+    }
+
+    {% if configured %}
+        $(document).ready(function() {
+            current_wifi();
+            display_wifi();
+        });
+    {% endif %}
+</script>
+{% endblock %}

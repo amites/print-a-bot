@@ -1,0 +1,47 @@
+{% load i18n %}
+<div id="ajax-modal" class="modal fade" tabindex="-1" style="display: none;">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content"></div>
+    </div>
+</div>
+
+<script id="template-waiting" type="text/x-handlebars-template">
+    <div class="text-center">
+        <i class="fa fa-spinner fa-spin fa-5x"></i>
+        {% verbatim %}{{#if msg }}<h3>{{{ msg }}}</h3>{{/if }}{% endverbatim %}
+    </div>
+</script>
+
+<script id="template-loading-modal" type="text/x-handlebars-template">
+{% verbatim %}
+    <div id="{{ bar_id }}">
+        <div class="progress progress-striped active">
+            <div class="progress-bar" style="width: 100%;"></div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade in" id="{{ bg_id }}"></div>
+{% endverbatim %}
+</script>
+
+<script id="template-modal-content" type="text/x-handlebars-template">
+{% verbatim %}
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3 class="modal-title" id="modal-label">{{ title }}</h3>
+    </div>
+    <div class="modal-body" id="modal-body">{{{ content }}}</div>
+    <div class="modal-footer">{{ footer }}</div>
+{% endverbatim %}
+</script>
+
+<script id="template-alert" type="text/x-handlebars-template">
+{% verbatim %}
+    <div class="alert alert-{{{ success_class success }}}" role="alert">
+{% endverbatim %}
+        <button type="button" class="close" data-dismiss="alert">
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">{% trans 'Close' %}</span>
+        </button>
+        {% verbatim %}{{{ msg }}}{% endverbatim %}
+    </div>
+</script>

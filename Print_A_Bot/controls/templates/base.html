@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 
+{% load static %}
 
 <html>
 
@@ -7,6 +8,10 @@
 	
 	<title>{% block title %}{% endblock title %}</title>
 
+  <!--[if lt IE 9]><script src="{% static 'js/html5shiv.js' %}"></script><![endif]-->
+  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+  {% block extra_head %}{% endblock %}
 </head>
 
 <body>
@@ -30,12 +35,19 @@
       <li><a href="{% url 'lights' %}">Lights</a></li>
       <li><a href="{% url 'create_lightshow' %}">Create Lightshow</a></li>
       <li><a href="{% url 'create_lightshow_step' %}">Create Lightshow Step</a></li>
+      <li><a href="{% url 'wifi:home' %}">Configure Wifi</a></li>
+      <li><a href="{% url 'wifi:access_point' %}">Turn on Access Point</a></li>
     </ul>
   </div>
   <hr>
 	
 	{% block content %}
 	{% endblock content %}
+
+{% include "includes/handlebars_scripts.html" %}
+{% include "includes/footer_scripts.html" %}
+{% block extra_scripts %}{% endblock %}
+{% block extra_js %}{% endblock %}
 
 </body>
 

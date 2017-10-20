@@ -15,6 +15,7 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+PROJECT_NAME = 'print-a-bot'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -38,9 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'djconfig',
+    'rest_framework',
+
     # Apps
     'controls',
-    #'rest_framework',
+    'djwifi.apps.DjWifiConfig',
 
     ]
 
@@ -77,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'djconfig.middleware.DjConfigMiddleware',
 ]
 
 ROOT_URLCONF = 'Print_A_Bot.urls'
@@ -84,7 +89,10 @@ ROOT_URLCONF = 'Print_A_Bot.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'controls', 'templates'),
+            os.path.join(BASE_DIR, 'djwifi', 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -148,6 +156,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+ ]
+
+WIFI_INTERFACE = 'wlan0'
+WIFI_PASSWORD = 'password'
+
 
 # Override settings to match environment
 try:
