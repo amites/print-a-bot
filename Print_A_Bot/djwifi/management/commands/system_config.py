@@ -3,7 +3,6 @@ from datetime import datetime
 from logging import getLogger
 from os import path, remove, rename, system
 from subprocess import call, check_output, CalledProcessError
-from time import sleep
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -11,34 +10,21 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from djconfig.models import Config
 
-from djwifi.forms import WifiForm
-
 
 logger = getLogger(__name__)
 
 
 class Command(BaseCommand):
-    # TODO: add command line args to initial_config for individual functions
     def add_arguments(self, parser):
         # linux config
-        parser.add_argument('--initial', '--full', action='store_true', dest='run_config', default=False,
-                            help=_('Run a full initial configuration')),
-        parser.add_argument('--dev', action='store_true', dest='dev', default=False,
-                            help=_('Configure as a development hub.')),
-        parser.add_argument('--install', action='store_true', dest='install_packages', default=False,
-                            help=_('Whether to run package installation scripts.')),
-
-        parser.add_argument('--host', action='store_true', dest='update_host', default=False,
-                            help=_('Update system hostname using settings.HOST_NAME.')),
-        parser.add_argument('--ntp', action='store_true', dest='configure_ntp', default=False,
-                            help=_('Whether to configure and restart ntp service.')),
         parser.add_argument('--timezone', action='store_true', dest='set_timezone', default=False,
                             help=_('Set system timezone from config.')),
         parser.add_argument('--cleanup', action='store_true', dest='cleanup', default=False,
                             help=_('Clean up system to maintain stability.')),
-
-        parser.add_argument('--startup', action='store_true', dest='startup', default=False,
-                            help=_('Run startup actions')),
+        parser.add_argument('--reboot', action='store_true', dest='reboot', default=False,
+                            help=_('Reboot after previous commands complete.'))
+        parser.add_argument('--shutdown', action='store_true', dest='shutdown', default=False,
+                            help=_('Run shutdown scripts.'))
 
         # wifi
         parser.add_argument('--ap_on', action='store_true', dest='ap_on', default=False,
@@ -46,16 +32,6 @@ class Command(BaseCommand):
         parser.add_argument('--ap_off', action='store_true', dest='ap_off', default=False,
                             help=_('Stop wireless access point.')),
         parser.add_argument('--set_wifi', action='store_true', dest='set_wifi', default=False),
-
-        # beaglebone specific
-        parser.add_argument('--no-heartbeat', action='store_true', dest='disable_heartbeat', default=False,
-                            help=_('Whether to disable the Beaglebone Black led heartbeat.')),
-        parser.add_argument('--pins-on', action='store_true', dest='pins_on', default=False,
-                            help=_('Turn all GPIO pins on.')),
-        parser.add_argument('--pins-off', action='store_true', dest='pins_off', default=False,
-                            help=_('Turn all GPIO pins off.')),
-        parser.add_argument('--shutdown', action='store_true', dest='shutdown', default=False,
-                            help=_('Run shutdown scripts.'))
 
     def __init__(self):
         self.dev = False
@@ -66,19 +42,48 @@ class Command(BaseCommand):
         
         super(Command, self).__init__()
 
-    # server config #
+    #################
+    # System Config #
+    #################
 
     @staticmethod
-    def _configure_ntp(host=None):
-        """
-        Setup automated remote time sync.
-        """
-        logger.debug('running configure_ntp')
-        if host is None:
-            host = 'time.nist.gov'
-        call(['service', 'ntp', 'stop'])
-        call(['ntpdate', '-s', host])
-        call(['service', 'ntp', 'start'])
+    def _write_system_template(file_path, template, context=None):
+        if path.exists(file_path):
+            # backup old file
+            rename(file_path, '%s--%s' % (file_path, datetime.now().strftime('%Y-%m-%d--%H-%M')))
+        with open(file_path, 'w+') as f:
+            f.write(render_to_string('system/{}'.format(template), context if context else {}))
+
+    @staticmethod
+    def _get_ap_context(hostname=None):
+        if hostname is None:
+            hostname = getattr(settings, 'HOST_NAME', settings.PROJECT_NAME)
+
+        return {
+            'hostname': str(hostname),
+            'ssid': str(hostname),
+            'password': settings.WIFI_PASSWORD,
+        }
+
+    def _set_hostname(self, hostname=None):
+        context = self._get_ap_context()
+
+        logger.info('setting hostname to {hostname}'.format(**context))
+
+        # hosts
+        self._write_system_template('/etc/hosts', 'hosts', context)
+
+        # hostname
+        hostname_path = '/etc/hostname'
+        call(['rm', hostname_path])
+        with open(hostname_path, 'w+') as f:
+            f.write(context['hostname'])
+        call(['hostname', context['hostname']])
+
+        call(['service', 'avahi-daemon', 'restart'])
+
+        # hostapd
+        self._write_system_template('/etc/hostapd/hostapd.conf', 'access_point/hostapd.conf', context)
 
     @staticmethod
     def _kill_process(name):
@@ -95,29 +100,7 @@ class Command(BaseCommand):
                 else:
                     logger.info('found process %s but cannot find PID\n\t%s' % (name, line))
 
-    @staticmethod
-    def _write_system_template(file_path, template, context):
-        if path.exists(file_path):
-            # backup old file
-            rename(file_path, '%s--%s' % (file_path, datetime.now().strftime('%Y-%m-%d--%H-%M')))
-        with open(file_path, 'w+') as f:
-            f.write(render_to_string('system/%s' % template, context))
-
     # wifi #
-
-    @staticmethod
-    def _set_wifi_interface():
-        try:
-            output = check_output('iwconfig')
-        except OSError:
-            logger.warning('iwlist not available -- could not set wifi_interface')
-            return
-        result = re.search('wlan\d', output)
-        if not result:
-            logger.warning('no wifi interface found -- could not set wifi_interface')
-            return
-        # config_save('wifi_interface', result.group(0))
-        return True
 
     def _configure_wifi(self):
         try:
@@ -173,81 +156,82 @@ class Command(BaseCommand):
 }}'''
 
         with open(wpa_conf_path, 'a') as f:
-            f.write('\n\n')
+            f.write('\n')
             f.write(wpa_entry.format(**wifi_data))
-
-        if not settings.DEBUG:
-            call(['shutdown', '-r', 'now'])
 
     @staticmethod
     def _cycle_wifi(mode=None):
+        """
+        utility to support switching wifi networks
+        """
         call(['ifdown', settings.WIFI_INTERFACE])
         if mode is not None:
             call(['iwconfig', settings.WIFI_INTERFACE, 'mode', mode])
         call(['ifup', settings.WIFI_INTERFACE])
 
     # wifi access point #
-
-    @staticmethod
-    def _setup_wifi_ap():
+    def _setup_wifi_ap(self):
+        """
+        setup RPi to act as a "access point" / hotspot
+        """
+        context = self._get_ap_context()
         try:
-            check_output(['ifconfig', settings.WIFI_AP_NAME])
-            logger.info('wifi vap %s already setup' % settings.WIFI_AP_NAME)
+            check_output(['ifconfig', context['hostname']])
+            logger.info('wifi ap {} already setup'.format(context['hostname']))
             return True
         except CalledProcessError:
             logger.info('Setting up virtual access point interface')
-        output = check_output(['ifconfig', settings.WIFI_INTERFACE])
-        logger.debug('ifconfig %s outout:\n%s' % (settings.WIFI_INTERFACE, output))
-        # set MAC address for wap0 virtual device
-        result = re.search(r'HWaddr (.*)', output)
-        if not result:
-            logger.warning('Unable to find MAC address for %s skipping virtual device config' % settings.WIFI_INTERFACE)
-            return
-        grps = result.group(1).strip().split(':')
-        hex_char = 'A' if grps[0][1] != 'A' else '6'
-        grps[0] = grps[0][0] + hex_char
-        fake_mac = ':'.join(grps)
-        # logger.debug('creating wap0 virtual device:\n\t%s' % ' '.join(['iw', 'phy', settings.WIFI_PHY_INTERFACE,
-        #                                                                'interface', 'add', settings.WIFI_AP_NAME,
-        #                                                                'type', '__ap']))
-        call(['iw', 'phy', settings.WIFI_PHY_INTERFACE, 'interface', 'add', settings.WIFI_AP_NAME, 'type', '__ap'])
-        logger.debug('added %s virtual device on phy %s' % (settings.WIFI_INTERFACE, settings.WIFI_PHY_INTERFACE))
-        call(['ifconfig', settings.WIFI_AP_NAME, 'hw', 'ether', fake_mac])
-        logger.debug('set wap0 HW address to %s' % fake_mac)
-        call(['ifconfig', settings.WIFI_AP_NAME, settings.WIFI_AP_IP, 'netmask', '255.255.255.0'])
-        logger.debug('setup wap0 to ip %s' % settings.WIFI_AP_IP)
-        logger.info('wifi vap %s setup' % settings.WIFI_AP_NAME)
+        call(['service', 'hostapd', 'stop'])
+        call(['service', 'dnsmasq', 'stop'])
+
+        self._write_system_template('/etc/dnsmasq.conf', 'access_point/dnsmasq.conf')
+        self._write_system_template('/etc/hostapd/hostapd.conf', 'access_point/hostapd.conf', context)
+        self._write_system_template('/etc/network/interfaces', 'access_point/interfaces.conf', context)
+        self._write_system_template('/etc/default/hostapd', 'access_point/default_hostapd.conf', context)
+        self._write_system_template('/etc/dhcpcd.conf', 'access_point/dhcpcd.conf', context)
+        
+        call(['systemctl', 'enable', 'hostapd', ])
+        call(['systemctl', 'enable', 'dnsmasq', ])
         return True
 
     def _ap_start(self):
         logger.info('Starting access point')
-        self._setup_wifi_vap()
+        self._setup_wifi_ap()
 
-        call(['ifconfig', settings.WIFI_AP_NAME, settings.WIFI_AP_IP, 'up'])
-        logger.debug('brought up wap0 interface')
-        # service fails silent with debian 1.0 hostapd package
-        # call(['service', 'hostapd', 'restart'])
-        self._kill_process('hostapd')
-        call(['hostapd', '-B', '/etc/hostapd/hostapd.conf'])
-        sleep(2)  # allow hostapd to start first
-        call(['service', 'dnsmasq', 'restart'])
-        logger.info('Access point started')
+        call(['service', 'hostapd', 'start'])
+        call(['service', 'dnsmasq', 'start'])
+
+        logger.info('Access point will be started')
+
+    def _disable_wifi_ap(self):
+        """
+        disable wifi access point -- required to connect to another network 
+        """
+        call(['systemctl', 'disable', 'hostapd', ])
+        call(['systemctl', 'disable', 'dnsmasq', ])
+
+        context = self._get_ap_context()
+        self._write_system_template('/etc/network/interfaces', 'interfaces.conf', context)
+        self._write_system_template('/etc/dhcpcd.conf', 'dhcpcd.conf', context)
 
     def _ap_stop(self):
+        """
+        Stop and disable the access point if enabled 
+        """
         logger.info('Stopping access point')
-        # service calls don't always stop
-        call(['service', 'dnsmasq', 'stop'])
         call(['service', 'hostapd', 'stop'])
-        sleep(1)
-        self._kill_process('dnsmasq')
-        self._kill_process('hostapd')
-        try:
-            call(['iw', 'dev', settings.WIFI_AP_NAME, 'del'])
-        except CalledProcessError:
-            logger.info('%s not currently available' % settings.WIFI_AP_NAME)
-        logger.info('access point stopped')
+        call(['service', 'dnsmasq', 'stop'])
+
+        self._disable_wifi_ap()
+
+        logger.info('Access point disabled')
 
     # linux system #
+
+    @staticmethod
+    def _reboot():
+        logger.info('Rebooting system')
+        call(['reboot', ])
 
     @staticmethod
     def _clean_logs(size=None):
@@ -273,22 +257,18 @@ class Command(BaseCommand):
                     system('> %s' % file_path)
 
     def handle(self, *args, **options):
-        print 'running handle'
-
         logger.info('Running system_config with options:\n\t%s' % str(options))
 
         self.dev = options.get('dev', False)
 
         if options.get('cleanup'):
             self._clean_logs()
-            self._configure_ntp()
-
-        if options.get('configure_ntp', False):
-            self._configure_ntp()
 
         if options.get('set_wifi', False):
+            self._disable_wifi_ap()
             self._configure_wifi()
             self._set_wifi_network()
+
         # configure access point
         if options.get('ap_on', False):
             self._ap_start()
@@ -296,6 +276,8 @@ class Command(BaseCommand):
         if options.get('ap_off', False):
             self._ap_stop()
 
+        if options.get('reboot', False):
+            self._reboot()
+
         if options.get('shutdown', False):
-            # self._set_pins(False)
             self._clean_logs()

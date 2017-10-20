@@ -1,7 +1,7 @@
 var modal_id = '#ajax-modal';
 
 function notify_data(data, width, delay) {
-    if (data.msg.length > 0) {
+    if (typeof data.msg !== 'undefined' && data.msg.length > 0) {
         $.bootstrapGrowl(data.msg, {
             type: ((data.success) ? 'success' : 'error')
             ,align: 'center'
@@ -60,7 +60,7 @@ function load_ajax_modal(url, action, template_id, callback, title) {
 }
 
 function bind_modal(selector) {
-    // {# Set a default selector string. #}
+    // Set a default selector string.
     selector = typeof selector !== 'undefined' ? selector : '[data-toggle="modal"][data-href]';
 
     var obj = $(this);
@@ -96,7 +96,7 @@ function show_modal_content(content, title, footer) {
     modal_obj.modal('show');
 }
 
-// Handlebars helpers //
+// Handlebars.js helpers //
 
 Handlebars.registerHelper('to_lower', function(str) {
     return str.toLowerCase();

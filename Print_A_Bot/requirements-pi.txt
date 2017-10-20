@@ -1,2 +1,4 @@
+-r requirements.txt  # pull in common requirements
+
 RPi.GPIO==0.6.3
 
