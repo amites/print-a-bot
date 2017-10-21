@@ -151,6 +151,64 @@ USE_L10N = True
 
 USE_TZ = True
 
+###########
+# Logging #
+###########
+
+# https://docs.python.org/2/library/logging.html
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'filters': [],
+        },
+        'file_log': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': os.path.join(BASE_DIR, 'print-a-bot.log'),
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['file_log', 'console', ],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'debug': {
+            'handlers': ['console', ],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'django.request': {
+            'handlers': [],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'django.db.backend': {
+            'handlers': ['file_log', 'console', ],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+    },
+}
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
