@@ -23,7 +23,7 @@ sudo systemctl start gunicorn_bot
 sudo service nginx restart
 
 # setup running check network script at boot
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SYSTEM_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "@reboot root python $DIR/system/check_network.py" > /etc/cron.d/ap_check
 cat > /etc/network/if-down.d/ap_check.sh << EOF
