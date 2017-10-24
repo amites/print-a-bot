@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 
 
 def _setup_light():
-    GPIO.setmode(GPIO.BOARD)
+    GPIO.setmode(settings.PIN_MODE)
     for led_num, led_data in settings.LED_CHOICES:
         for pin_num in led_data.keys():
             GPIO.setup(pin_num, GPIO.OUT)
@@ -14,7 +14,7 @@ def _setup_light():
 
 def set_light(values, led_num):
     pins = {}
-    led_data = settings.LED_CHOICES.get(led_num)
+    led_data = dict(settings.LED_CHOICES).get(led_num)
     pins[led_num] = {
         'r': GPIO.PWM(led_data['r'], settings.LED_FREQ),
         'g': GPIO.PWM(led_data['g'], settings.LED_FREQ),
