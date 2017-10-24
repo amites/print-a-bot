@@ -16,6 +16,56 @@
 
 <body>
 
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Print-a-Bot</a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li><a href="{% url 'home' %}">Home</a></li>
+              <li><a href="#">About</a></li>
+
+
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  Movement <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% url 'movement' %}">Movement</a></li>
+                  <li role="separator" class="divider"></li>
+                  <li><a href="{% url 'move_bot' %}">Quick Move</a></li>
+                </ul>
+              </li>
+
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  Lights <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% url 'lights' %}">Lights</a></li>
+                  <li><a href="{% url 'create_lightshow' %}">Create Lightshow</a></li>
+                  <li><a href="{% url 'create_lightshow_step' %}">Create Lightshow Step</a></li>
+                  <li role="separator" class="divider"></li>
+                  <li><a href="{% url 'light_bot' %}"><i>Run Light Show</i></a></li>
+                </ul>
+              </li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  Wifi <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% url 'wifi:home' %}">Configure Wifi</a></li>
+                  <li><a href="{% url 'wifi:access_point' %}">Turn on Access Point</a></li>
+                </ul>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
   {% if messages %}
     <div>
       <strong>Messages:</strong>
@@ -27,20 +77,6 @@
     </div>
   {% endif %}
 
- <div>
-    <strong>Menu:</strong>
-    <ul>
-      <li><a href="{% url 'home' %}">Home</a></li>
-      <li><a href="{% url 'movement' %}">Movement</a></li>
-      <li><a href="{% url 'lights' %}">Lights</a></li>
-      <li><a href="{% url 'create_lightshow' %}">Create Lightshow</a></li>
-      <li><a href="{% url 'create_lightshow_step' %}">Create Lightshow Step</a></li>
-      <li><a href="{% url 'wifi:home' %}">Configure Wifi</a></li>
-      <li><a href="{% url 'wifi:access_point' %}">Turn on Access Point</a></li>
-    </ul>
-  </div>
-  <hr>
-	
 	{% block content %}
 	{% endblock content %}
 
