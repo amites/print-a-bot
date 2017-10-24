@@ -1,0 +1,100 @@
+[
+{
+    "model": "controls.lightshow",
+    "pk": 1,
+    "fields": {
+        "name": "first"
+    }
+},
+{
+    "model": "controls.lightshowstep",
+    "pk": 1,
+    "fields": {
+        "show": 1,
+        "light": 1,
+        "red": null,
+        "green": null,
+        "blue": null,
+        "hex_color": "#f44141",
+        "order": null
+    }
+},
+{
+    "model": "controls.lightshowstep",
+    "pk": 2,
+    "fields": {
+        "show": 1,
+        "light": 1,
+        "red": null,
+        "green": null,
+        "blue": null,
+        "hex_color": "#7c6b49",
+        "order": null
+    }
+},
+{
+    "model": "controls.lightshowstep",
+    "pk": 3,
+    "fields": {
+        "show": 1,
+        "light": 1,
+        "red": null,
+        "green": null,
+        "blue": null,
+        "hex_color": "#a1a52c",
+        "order": null
+    }
+},
+{
+    "model": "controls.lightshowstep",
+    "pk": 4,
+    "fields": {
+        "show": 1,
+        "light": 1,
+        "red": null,
+        "green": null,
+        "blue": null,
+        "hex_color": "#55cc22",
+        "order": null
+    }
+},
+{
+    "model": "controls.lightshowstep",
+    "pk": 5,
+    "fields": {
+        "show": 1,
+        "light": 1,
+        "red": null,
+        "green": null,
+        "blue": null,
+        "hex_color": "#0c2ccc",
+        "order": null
+    }
+},
+{
+    "model": "controls.lightshowstep",
+    "pk": 6,
+    "fields": {
+        "show": 1,
+        "light": 1,
+        "red": null,
+        "green": null,
+        "blue": null,
+        "hex_color": "#cc26c9",
+        "order": null
+    }
+},
+{
+    "model": "controls.lightshowstep",
+    "pk": 7,
+    "fields": {
+        "show": 1,
+        "light": 1,
+        "red": null,
+        "green": null,
+        "blue": null,
+        "hex_color": "#e80032",
+        "order": null
+    }
+}
+]

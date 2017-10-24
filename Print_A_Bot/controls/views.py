@@ -23,6 +23,7 @@ def home(request):
 def single_lightshow(request, lightshow_id):
     try:
         lightshow = LightShow.objects.get(id=lightshow_id)
+        call_sudo_command('system_config', new_process=True, lightshow=lightshow_id)
     except LightShow.DoesNotExist:
         messages.add_message(request, messages.ERROR, 'Light show with ID {} does not exist.'.format(lightshow_id))
         return redirect(reverse('home'))

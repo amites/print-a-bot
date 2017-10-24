@@ -30,10 +30,6 @@ class Command(BaseCommand):
         parser.add_argument('--shutdown', action='store_true', dest='shutdown', default=False,
                             help=_('Run shutdown scripts.'))
 
-        # lights
-        parser.add_argument('--lightshow', dest='lightshow',
-                            help=_('Run lightshow for given id'))
-
         # wifi
         parser.add_argument('--ap_on', action='store_true', dest='ap_on', default=False,
                             help=_('Start wireless access point.')),
@@ -107,26 +103,6 @@ class Command(BaseCommand):
                     logger.info('killed process %s - %s' % (name, result.group(1)))
                 else:
                     logger.info('found process %s but cannot find PID\n\t%s' % (name, line))
-
-    # lights #
-    @staticmethod
-    def _run_light(lightshow_id):
-        light_file_path = path.join(settings.BASE_DIR, 'light_running')
-        if path.exists(light_file_path):
-            while True:
-                time.sleep(1)
-                if not path.exists(light_file_path):
-                    break
-        with open(light_file_path, 'w+') as f:
-            f.write('running')
-        try:
-            obj = LightShow.objects.get(pk=lightshow_id)
-        except LightShow.DoesNotExist:
-            logger.error('LightShow with id {} does not exist'.format(lightshow_id))
-            return
-        logger.info('Running LightShow {}'.format(lightshow_id))
-        set_light(obj.lightshowstep_set.values_list('hex_color', flat=True), 1)
-        remove(light_file_path)
 
     # wifi #
     def _configure_wifi(self):
@@ -307,6 +283,3 @@ class Command(BaseCommand):
 
         if options.get('shutdown', False):
             self._clean_logs()
-
-        if options.get('lightshow', False):
-            self._run_light(options['lightshow'])
