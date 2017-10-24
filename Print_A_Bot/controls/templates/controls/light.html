@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Light Show</title>
+</head>
+<body>
+
+    {% url 'light_bot' as url %}
+
+    <ul>
+        {% for light_show in light_shows %}
+          <li><a href="{{ url }}?show={{ light_show.pk }}">{{ light_show.name }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
