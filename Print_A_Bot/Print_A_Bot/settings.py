@@ -64,12 +64,24 @@ STBY = 7
 
 
 # RPi LED control
-# LED A and B are pin numbers..
-LED_A = 5
-LED_B = 10
+LED_FREQ = 100
+
+LED_A = {
+    'r': 33,
+    'g': 35,
+    'b': 37,
+}
+
+LED_B = {
+    'r': 36,
+    'g': 38,
+    'b': 40,
+}
+
+
 LED_CHOICES = (
-    (1, 'LED 1'),
-    (2, 'LED 2'),
+    (1, LED_A),
+    (2, LED_B),
 )
 
 
