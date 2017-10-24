@@ -12,7 +12,6 @@ from controls.utils import light, motor
 from controls.utils.system import call_sudo_command
 
 
-
 def home(request):
     context = {
         'lightshows': LightShow.objects.all()

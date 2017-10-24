@@ -7,7 +7,7 @@ from django.conf import settings
 
 class LightShow(models.Model):
     name = models.CharField(max_length=100)
-    # light = models.IntegerField(choices=settings.LED_CHOICES)
+    light = models.IntegerField(choices=settings.LED_CHOICES, null=True, blank=True)
 
     def __str__(self):
         return self.name
