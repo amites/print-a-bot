@@ -1,3 +1,4 @@
+colour==0.1.4
 pytz==2017.2
 
 Django==1.11.6

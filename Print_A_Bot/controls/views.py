@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render, redirect
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib import messages
+from django.shortcuts import render, redirect
 from django.views import View
 
 from controls.forms import LightShowForm, LightShowStepForm
@@ -22,7 +23,8 @@ def home(request):
 def single_lightshow(request, lightshow_id):
     try:
         lightshow = LightShow.objects.get(id=lightshow_id)
-        call_sudo_command('system_config', new_process=True, lightshow=lightshow_id)
+        led_pin = lightshow.light if lightshow.light else settings.LED_CHOICES[0][0]
+        call_sudo_command('lightshow', new_process=True, lightshow=lightshow_id, led_pin=led_pin)
     except LightShow.DoesNotExist:
         messages.add_message(request, messages.ERROR, 'Light show with ID {} does not exist.'.format(lightshow_id))
         return redirect(reverse('home'))
@@ -125,7 +127,7 @@ class ShowLights(View):
         show_exists = LightShow.objects.filter(pk=show_num).exists()
         # light.set_light(obj.lightshowstep_set.values_list('hex_color', flat=True), 1)
         if show_exists:
-            call_sudo_command('system_config', new_process=True, lightshow=show_num)
+            call_sudo_command('lightshow', new_process=True, lightshow=show_num)
 
         context = {
             'light_shows': LightShow.objects.all(),
