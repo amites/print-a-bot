@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
@@ -10,6 +9,7 @@ from django.views import View
 from controls.forms import LightShowForm, LightShowStepForm
 from controls.models import LightShow, LightShowStep
 from controls.utils import light, motor
+from controls.utils.system import call_sudo_command
 
 
 
@@ -122,11 +122,10 @@ class MoveBot(View):
 class ShowLights(View):
     def get(self, request):
         show_num = request.GET.get('show', None)
-        try:
-            obj = LightShow.objects.get(pk=show_num)
-            light.set_light(obj.lightshowstep_set.values_list('hex_color', flat=True), 1)
-        except LightShow.DoesNotExist:
-            pass
+        show_exists = LightShow.objects.filter(pk=show_num).exists()
+        # light.set_light(obj.lightshowstep_set.values_list('hex_color', flat=True), 1)
+        if show_exists:
+            call_sudo_command('system_config', new_process=True, lightshow=show_num)
 
         context = {
             'light_shows': LightShow.objects.all(),
