@@ -1,5 +1,4 @@
 import re
-import time
 from datetime import datetime
 from logging import getLogger
 from os import path, remove, rename, system
@@ -10,9 +9,6 @@ from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from djconfig.models import Config
-
-from controls.models import LightShow
-from controls.utils.light import set_light
 
 
 logger = getLogger(__name__)
@@ -70,7 +66,7 @@ class Command(BaseCommand):
         }
 
     def _set_hostname(self, hostname=None):
-        context = self._get_ap_context()
+        context = self._get_ap_context(hostname)
 
         logger.info('setting hostname to {hostname}'.format(**context))
 

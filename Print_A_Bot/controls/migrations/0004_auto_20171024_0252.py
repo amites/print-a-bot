@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -27,10 +28,10 @@ class Migration(migrations.Migration):
             name='green',
             field=models.IntegerField(blank=True, null=True),
         ),
-        migrations.AlterField(
-            model_name='lightshowstep',
+        migrations.AddField(
+            model_name='lightshow',
             name='light',
-            field=models.IntegerField(choices=[(1, {b'b': 37, b'g': 35, b'r': 33}), (2, {b'b': 40, b'g': 38, b'r': 36})]),
+            field=models.IntegerField(blank=True, choices=[(1, {b'b': 37, b'g': 35, b'r': 33}), (2, {b'b': 40, b'g': 38, b'r': 36})], null=True),
         ),
         migrations.AlterField(
             model_name='lightshowstep',
@@ -41,5 +42,11 @@ class Migration(migrations.Migration):
             model_name='lightshowstep',
             name='red',
             field=models.IntegerField(blank=True, null=True),
+        ),
+        migrations.AlterField(
+            model_name='lightshowstep',
+            name='show',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='step',
+                                    to='controls.LightShow'),
         ),
     ]
